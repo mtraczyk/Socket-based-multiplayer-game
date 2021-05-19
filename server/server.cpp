@@ -6,6 +6,7 @@
 #include <sys/timerfd.h>
 #include <time.h>
 #include <poll.h>
+#include <utility>
 
 #include "server.h"
 #include "err.h"
@@ -17,10 +18,21 @@
  */
 #define DESC_ARR_SIZE MAX_NUM_OF_PLAYERS + 2
 #define DIS_TIME_SEC 2 // disconnection time in seconds
-#define DIS_TIME_NANO 2 * 1000000000 // disconnection time in nanoseconds
+#define NANO_SEC 1000000000 // one nanosecond
+#define DIS_TIME_NANO 2 * NANO_SEC // disconnection time in nanoseconds
 
 struct pollfd pfds[DESC_ARR_SIZE]; // pollfd array
 nfds_t nfds = DESC_ARR_SIZE; // pfds array's size
+
+struct itimerspec new_value[DESC_ARR_SIZE];
+struct timespec now; // auxiliary struct to store current time
+
+// Active players' info.
+struct sockaddr_in clientAddress[DESC_ARR_SIZE];
+time_t lastActivity[DESC_ARR_SIZE]; // when was the last activity performed by a client
+u_short activePlayersNum = 0;
+
+struct sockaddr_in auxClientAddress;
 
 namespace {
   void setPollfdArray(int sock) {
@@ -37,24 +49,53 @@ namespace {
     }
   }
 
-  void checkNextTurn() {
+  void performNextTurn() {
+
+  }
+
+  inline void getCurrentTime() {
+    if (clock_gettime(CLOCK_REALTIME, &now) == -1) {
+      syserr("clock_gettime");
+    }
+  }
+
+  void checkNextTurn(time_t nanoSecPeriod) {
     if (pfds[DESC_ARR_SIZE - 1].revents != 0) {
       if (pfds[DESC_ARR_SIZE - 1].revents & POLLIN) {
-        // next turn
-        // set timer again
+        getCurrentTime();
+        //set timer again
+        new_value[DESC_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
+        new_value[DESC_ARR_SIZE - 1].it_value.tv_nsec = now.tv_sec + nanoSecPeriod; // first expiration time
+        new_value.it_interval.tv_sec = 0;
+        new_value.it_interval.tv_nsec = nanoSecPeriod; // period
+        if (timerfd_settime(pfds[DESC_ARR_SIZE - 1], TFD_TIMER_ABSTIME, &new_value, NULL) == -1) {
+          syserr("timerfd_settime");
+        }
+
+        performNextTurn();
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
       }
     }
   }
 
+  inline void disarmATimer(int timerArrNum) {
+    new_value[timerArrNum].it_value.tv_sec = 0;
+    new_value[timerArrNum].it_value.tv_nsec = 0;
+  }
+
   void checkDisconnection() {
     /* Iterate possibly disconnected clients. */
     for (int i = 1; i < DESC_ARR_SIZE - 1; i++) {
-      if (pfds[DESC_ARR_SIZE - 1].revents != 0) {
-        if (pfds[DESC_ARR_SIZE - 1].revents & POLLIN) {
-          // disconnected
-          // update number of players
+      if (pfds[i].revents != 0) {
+        if (pfds[i].revents & POLLIN) {
+          getCurrentTime();
+          if (now.tv_nsec - lastActivity[i] >= DIS_TIME_NANO) {
+            // disconnected
+            activePlayersNum--; // update number of players
+            lastActivity[i] = 0;
+            disarmATimer(i);
+          }
         } else { /* POLLERR | POLLHUP */
           syserr("disconnection timer error");
         }
@@ -68,7 +109,7 @@ namespace {
 }
 
 void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
-            uint32_t roundPerSecond, uint32_t boardWidth, uint32_t boardHeight) {
+            uint32_t roundsPerSecond, uint32_t boardWidth, uint32_t boardHeight) {
   int sock; // socket descriptor
   int ready; // variable to store poll return value
   struct sockaddr_in6 server_address;
@@ -102,7 +143,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
     /* Checks whether timer for the next round had expired.
      * If that's the case needed operations are performed.
      */
-    checkNextTurn();
+    checkNextTurn(NANO_SEC / roundsPerSecond);
     checkDisconnection(); // check for disconnected clients
     checkDatagram(); // check for something to read in the socket
   }
