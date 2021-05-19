@@ -56,8 +56,9 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
   client_address_len = sizeof(client_address);
   setPollfdArray(sock); // sets the array that will be used for polling
 
+
+
   if (close(sock) == -1) { // very rare errors can occur here, but then
     syserr("close"); // it's healthy to do the check
   }
-
 }
