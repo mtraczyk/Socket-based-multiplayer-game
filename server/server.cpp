@@ -66,9 +66,9 @@ namespace {
         //set timer again
         new_value[DESC_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
         new_value[DESC_ARR_SIZE - 1].it_value.tv_nsec = now.tv_sec + nanoSecPeriod; // first expiration time
-        new_value.it_interval.tv_sec = 0;
-        new_value.it_interval.tv_nsec = nanoSecPeriod; // period
-        if (timerfd_settime(pfds[DESC_ARR_SIZE - 1], TFD_TIMER_ABSTIME, &new_value, NULL) == -1) {
+        new_value[DESC_ARR_SIZE].it_interval.tv_sec = 0;
+        new_value[DESC_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
+        if (timerfd_settime(pfds[DESC_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &new_value, NULL) == -1) {
           syserr("timerfd_settime");
         }
 
