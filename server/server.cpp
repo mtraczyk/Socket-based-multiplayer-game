@@ -68,7 +68,7 @@ namespace {
         new_value[DESC_ARR_SIZE - 1].it_value.tv_nsec = now.tv_sec + nanoSecPeriod; // first expiration time
         new_value[DESC_ARR_SIZE].it_interval.tv_sec = 0;
         new_value[DESC_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
-        if (timerfd_settime(pfds[DESC_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &new_value, NULL) == -1) {
+        if (timerfd_settime(pfds[DESC_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &new_value[DESC_ARR_SIZE], NULL) == -1) {
           syserr("timerfd_settime");
         }
 
@@ -82,6 +82,9 @@ namespace {
   inline void disarmATimer(int timerArrNum) {
     new_value[timerArrNum].it_value.tv_sec = 0;
     new_value[timerArrNum].it_value.tv_nsec = 0;
+    if (timerfd_settime(pfds[timerArrNum].fd, TFD_TIMER_ABSTIME, &new_value[timerArrNum], NULL) == -1) {
+      syserr("timerfd_settime");
+    }
   }
 
   void checkDisconnection() {
