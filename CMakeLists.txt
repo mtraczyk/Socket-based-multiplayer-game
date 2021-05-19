@@ -7,13 +7,13 @@ set(CMAKE_CXX_FLAGS "-g -Wall -Wextra")
 set(DEFAULT_BUILD_TYPE "RELEASE")
 
 #Add the google test subdirectory
-add_subdirectory(/Users/mac/Desktop/projectsInC++/zadanie2SIK/googletest)
+# add_subdirectory(/Users/mac/Desktop/projectsInC++/zadanie2SIK/googletest)
 
 #include googletest/include dir
-include_directories(/Users/mac/Desktop/projectsInC++/zadanie2SIK/googletest/include)
+# include_directories(/Users/mac/Desktop/projectsInC++/zadanie2SIK/googletest/include)
 
 #include the googlemock/include dir
-include_directories(/Users/mac/Desktop/projectsInC++/zadanie2SIK/googletest/googlemock/include)
+# include_directories(/Users/mac/Desktop/projectsInC++/zadanie2SIK/googletest/googlemock/include)
 
 # Wskazujemy pliki źródłowe.
 set(SERVER_SOURCE_FILES
@@ -30,37 +30,37 @@ set(CLIENT_SOURCE_FILES
         client/main.cpp
         )
 
-set(SERVER_TEST_SOURCE_FILES
-        additional_src/server_test.cpp
-        server/parsing_functionalities.h
-        server/parsing_functionalities.cpp
-        server/err.h
-        server/err.c
-        server/server.h
-        server/server.cpp
-        )
+# set(SERVER_TEST_SOURCE_FILES
+  #      additional_src/server_test.cpp
+   #     server/parsing_functionalities.h
+    #    server/parsing_functionalities.cpp
+     #   server/err.h
+      #  server/err.c
+       # server/server.h
+        #server/server.cpp
+        #)
 
-set(CLIENT_TEST_SOURCE_FILES
-        additional_src/client_test.cpp
-        )
+#set(CLIENT_TEST_SOURCE_FILES
+ #       additional_src/client_test.cpp
+  #      )
 
 # Wskazujemy plik wykonywalny.
 add_executable(server ${SERVER_SOURCE_FILES})
 
 add_executable(client ${CLIENT_SOURCE_FILES})
 
-add_executable(server_test ${SERVER_TEST_SOURCE_FILES})
+#add_executable(server_test ${SERVER_TEST_SOURCE_FILES})
 
-add_executable(client_test ${CLIENT_TEST_SOURCE_FILES})
-
-#Link with GoogleTest
-target_link_libraries(server_test gtest gtest_main)
-
-#Link with GoogleMock
-target_link_libraries(server_test gmock gmock_main)
+#add_executable(client_test ${CLIENT_TEST_SOURCE_FILES})
 
 #Link with GoogleTest
-target_link_libraries(client_test gtest gtest_main)
+#target_link_libraries(server_test gtest gtest_main)
 
 #Link with GoogleMock
-target_link_libraries(client_test gmock gmock_main)
+#target_link_libraries(server_test gmock gmock_main)
+
+#Link with GoogleTest
+#target_link_libraries(client_test gtest gtest_main)
+
+#Link with GoogleMock
+#target_link_libraries(client_test gmock gmock_main)

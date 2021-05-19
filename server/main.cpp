@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     fatal("Incorrect program parameters!\nUsage: ./screen-worms-server [-p n] [-s n] [-t n] [-v n] [-w n] [-h n]");
   }
 
-  server();
+  server(portNum, seed, turningSpeed, roundsPerSecond, boardWidth, boardHeight);
 
   return 0;
 }
