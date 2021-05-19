@@ -1,7 +1,8 @@
-#include <iostream>
 #include <ctime>
+
 #include "err.h"
 #include "parsing_functionalities.h"
+#include "server.h"
 
 #define DEFAULT_PORT_NUM 2021
 #define DEFAULT_TURNING_SPEED 6
@@ -22,6 +23,8 @@ int main(int argc, char **argv) {
                            &turningSpeed, &roundsPerSecond, &boardWidth, &boardHeight) < 0) {
     fatal("Incorrect program parameters!\nUsage: ./screen-worms-server [-p n] [-s n] [-t n] [-v n] [-w n] [-h n]");
   }
+
+  server();
 
   return 0;
 }

@@ -18,6 +18,8 @@ include_directories(/Users/mac/Desktop/projectsInC++/zadanie2SIK/googletest/goog
 # Wskazujemy pliki źródłowe.
 set(SERVER_SOURCE_FILES
         server/main.cpp
+        server/server.h
+        server/server.cpp
         server/parsing_functionalities.h
         server/parsing_functionalities.cpp
         server/err.h
@@ -34,6 +36,8 @@ set(SERVER_TEST_SOURCE_FILES
         server/parsing_functionalities.cpp
         server/err.h
         server/err.c
+        server/server.h
+        server/server.cpp
         )
 
 set(CLIENT_TEST_SOURCE_FILES
