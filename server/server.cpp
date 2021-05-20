@@ -8,6 +8,7 @@
 #include <poll.h>
 #include <utility>
 #include <string>
+#include <iostream>
 
 #include "server.h"
 #include "err.h"
@@ -127,8 +128,12 @@ namespace {
     char *clientPort = new char [INET6_ADDRSTRLEN];
     char *auxPort = new char [INET6_ADDRSTRLEN];
 
+    auxIP = const_cast<char *>(inet_ntop(AF_INET6, &auxClientAddress, auxIP, INET6_ADDRSTRLEN));
+    std::cout << std::string(auxIP) << std::endl;
+
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (lastActivity[i] != 0) {
+        // check a connected client
 
       }
     }
