@@ -27,7 +27,9 @@ set(SERVER_SOURCE_FILES
         )
 
 set(CLIENT_SOURCE_FILES
-        client/main.cpp
+        client/main.c
+        client/err.h
+        client/err.c
         )
 
 set(SERVER_TEST_SOURCE_FILES
