@@ -122,26 +122,36 @@ namespace {
 
   // Returns SUCCESS if a client is connected, ERROR when something failed, and 0 when a client isn't connected.
   int isClientConnected() {
-    int codeResult = SUCCESS;
+    int codeResult = 0;
     char *clientIP = new char [INET6_ADDRSTRLEN];
     char *auxIP = new char [INET6_ADDRSTRLEN];
-    char *clientPort = new char [INET6_ADDRSTRLEN];
-    char *auxPort = new char [INET6_ADDRSTRLEN];
+    in_port_t clientPort;
+    in_port_t auxPort = auxClientAddress.sin_port;
 
     auxIP = const_cast<char *>(inet_ntop(AF_INET6, &auxClientAddress, auxIP, INET6_ADDRSTRLEN));
-    std::cout << std::string(auxIP) << std::endl;
+    if (auxIP != nullptr) {
+      for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
+        if (lastActivity[i] != 0) {
+          // check a connected client
+          clientIP = const_cast<char *>(inet_ntop(AF_INET6, &clientAddress[i], clientIP, INET6_ADDRSTRLEN));
+          if (clientIP == nullptr) {
+            codeResult = ERROR;
+            break;
+          }
 
-    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (lastActivity[i] != 0) {
-        // check a connected client
-
+          clientPort = clientAddress[i].sin_port;
+          if (std::string(auxIP) == std::string(clientIP) && auxPort == clientPort) {
+            codeResult = SUCCESS;
+            break;
+          }
+        }
       }
+    } else {
+      codeResult = ERROR;
     }
 
     delete[] clientIP;
     delete[] auxIP;
-    delete[] clientPort;
-    delete[] auxPort;
 
     return codeResult;
   }
