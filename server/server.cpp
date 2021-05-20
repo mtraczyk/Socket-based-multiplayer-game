@@ -7,39 +7,52 @@
 #include <time.h>
 #include <poll.h>
 #include <utility>
+#include <string>
 
 #include "server.h"
 #include "err.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known
 
-/* Descriptors' array is of a size which equals to MAX_NUM_OF_PLAYERS + 2.
+/* Data arrays are of a size which equals to MAX_NUM_OF_PLAYERS + 2.
  * One additional is needed for the server's socket, and one more for a turn timer.
  */
-#define DESC_ARR_SIZE MAX_NUM_OF_PLAYERS + 2
+#define DATA_ARR_SIZE MAX_NUM_OF_PLAYERS + 2
 #define DIS_TIME_SEC 2 // disconnection time in seconds
 #define NANO_SEC 1000000000 // one nanosecond
 #define DIS_TIME_NANO 2 * NANO_SEC // disconnection time in nanoseconds
+#define BUFFER_SIZE 1024
+#define CLIENT_DATAGRAM_MIN_SIZE 13 // session_id + turn_direction + next_expected_event_no = 13
+#define CLIENT_DATAGRAM_MAX_SIZE 33 // session_id + turn_direction + next_expected_event_no + player_name = 33
 
-struct pollfd pfds[DESC_ARR_SIZE]; // pollfd array
-nfds_t nfds = DESC_ARR_SIZE; // pfds array's size
+#define ERROR -1
+#define OK 0
+#define SUCCESS 1
 
-struct itimerspec new_value[DESC_ARR_SIZE];
+char buffer[BUFFER_SIZE];
+
+struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
+nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
+
+struct itimerspec newValue[DATA_ARR_SIZE];
 struct timespec now; // auxiliary struct to store current time
 
 // Active players' info.
-struct sockaddr_in clientAddress[DESC_ARR_SIZE];
-time_t lastActivity[DESC_ARR_SIZE]; // when was the last activity performed by a client
+struct sockaddr_in clientAddress[DATA_ARR_SIZE];
+time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
 u_short activePlayersNum = 0;
 
 struct sockaddr_in auxClientAddress;
+struct sockaddr_in auxSockInfo;
+socklen_t clientAddressLen, rcvaLen, sndaLen;
+int flags, sndFlags, len;
 
 namespace {
   void setPollfdArray(int sock) {
     pfds[0].fd = sock; // first descriptor in the array is socket's descriptor
     pfds[0].events = POLLIN; // poll will be done for POLLIN
 
-    for (int i = 1; i < DESC_ARR_SIZE; i++) {
+    for (int i = 1; i < DATA_ARR_SIZE; i++) {
       pfds[i].fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
       if (pfds[i].fd == -1) {
         syserr("timerfd_create");
@@ -60,15 +73,15 @@ namespace {
   }
 
   void checkNextTurn(time_t nanoSecPeriod) {
-    if (pfds[DESC_ARR_SIZE - 1].revents != 0) {
-      if (pfds[DESC_ARR_SIZE - 1].revents & POLLIN) {
+    if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
+      if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         getCurrentTime();
         //set timer again
-        new_value[DESC_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
-        new_value[DESC_ARR_SIZE - 1].it_value.tv_nsec = now.tv_sec + nanoSecPeriod; // first expiration time
-        new_value[DESC_ARR_SIZE].it_interval.tv_sec = 0;
-        new_value[DESC_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
-        if (timerfd_settime(pfds[DESC_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &new_value[DESC_ARR_SIZE], NULL) == -1) {
+        newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
+        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_sec + nanoSecPeriod; // first expiration time
+        newValue[DATA_ARR_SIZE].it_interval.tv_sec = 0;
+        newValue[DATA_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
+        if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE], NULL) == -1) {
           syserr("timerfd_settime");
         }
 
@@ -80,20 +93,20 @@ namespace {
   }
 
   inline void disarmATimer(int timerArrNum) {
-    new_value[timerArrNum].it_value.tv_sec = 0;
-    new_value[timerArrNum].it_value.tv_nsec = 0;
-    if (timerfd_settime(pfds[timerArrNum].fd, TFD_TIMER_ABSTIME, &new_value[timerArrNum], NULL) == -1) {
+    newValue[timerArrNum].it_value.tv_sec = 0;
+    newValue[timerArrNum].it_value.tv_nsec = 0;
+    if (timerfd_settime(pfds[timerArrNum].fd, TFD_TIMER_ABSTIME, &newValue[timerArrNum], NULL) == -1) {
       syserr("timerfd_settime");
     }
   }
 
   void checkDisconnection() {
     /* Iterate possibly disconnected clients. */
-    for (int i = 1; i < DESC_ARR_SIZE - 1; i++) {
+    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (pfds[i].revents != 0) {
         if (pfds[i].revents & POLLIN) {
           getCurrentTime();
-          if (now.tv_nsec - lastActivity[i] >= DIS_TIME_NANO) {
+          if (now.tv_nsec - lastActivity[i] > DIS_TIME_NANO) {
             // disconnected
             activePlayersNum--; // update number of players
             lastActivity[i] = 0;
@@ -106,8 +119,24 @@ namespace {
     }
   }
 
-  void checkDatagram() {
+  // Returns SUCCESS if a client is connected, ERROR when something failed, and 0 when a client isn't connected.
+  inline int isClientConnected() {
+    return SUCCESS;
+  }
 
+  void checkDatagram(int sock) {
+    sndaLen = sizeof(clientAddress);
+    rcvaLen = sizeof(clientAddress);
+    flags = 0; // we do net request anything special
+    len = recvfrom(sock, buffer, sizeof(buffer), flags, (struct sockaddr *) &auxClientAddress, &rcvaLen);
+
+    // ignore len < 0, we don't want the server to fail
+    if (len >= CLIENT_DATAGRAM_MIN_SIZE && len <= CLIENT_DATAGRAM_MAX_SIZE) {
+      auxSockInfo = (struct sockaddr_in) auxClientAddress;
+      if (isClientConnected() == SUCCESS || MAX_NUM_OF_PLAYERS > activePlayersNum) {
+        (void) printf("%.*s\n", (int) len, buffer);
+      }
+    }
   }
 }
 
@@ -115,9 +144,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
             uint32_t roundsPerSecond, uint32_t boardWidth, uint32_t boardHeight) {
   int sock; // socket descriptor
   int ready; // variable to store poll return value
-  struct sockaddr_in6 server_address;
-  struct sockaddr_in6 client_address;
-  socklen_t client_address_len;
+  struct sockaddr_in6 serverAddress;
 
   sock = socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, 0); // IPv6 UDP nonblock socket
 
@@ -125,16 +152,15 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
     syserr("socket");
   }
 
-  server_address.sin6_family = AF_INET6; // IPv6
-  server_address.sin6_addr = in6addr_any; // listening on all interfaces
-  server_address.sin6_port = htons(portNum); // port number is stored in portNum
+  serverAddress.sin6_family = AF_INET6; // IPv6
+  serverAddress.sin6_addr = in6addr_any; // listening on all interfaces
+  serverAddress.sin6_port = htons(portNum); // port number is stored in portNum
 
   // bind the socket to a concrete address
-  if (bind(sock, (struct sockaddr *) &server_address, (socklen_t) sizeof(server_address)) < 0) {
+  if (bind(sock, (struct sockaddr *) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
     syserr("bind, address taken.");
   }
 
-  client_address_len = sizeof(client_address);
   setPollfdArray(sock); // sets the array that will be used for polling
 
   for (;;) {
@@ -148,7 +174,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
      */
     checkNextTurn(NANO_SEC / roundsPerSecond);
     checkDisconnection(); // check for disconnected clients
-    checkDatagram(); // check for something to read in the socket
+    checkDatagram(sock); // check for something to read in the socket
   }
 
   if (close(sock) == -1) { // very rare errors can occur here, but then
