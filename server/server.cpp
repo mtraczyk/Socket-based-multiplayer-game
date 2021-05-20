@@ -120,8 +120,25 @@ namespace {
   }
 
   // Returns SUCCESS if a client is connected, ERROR when something failed, and 0 when a client isn't connected.
-  inline int isClientConnected() {
-    return SUCCESS;
+  int isClientConnected() {
+    int codeResult = SUCCESS;
+    char *clientIP = new char [INET6_ADDRSTRLEN];
+    char *auxIP = new char [INET6_ADDRSTRLEN];
+    char *clientPort = new char [INET6_ADDRSTRLEN];
+    char *auxPort = new char [INET6_ADDRSTRLEN];
+
+    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
+      if (lastActivity[i] != 0) {
+
+      }
+    }
+
+    delete[] clientIP;
+    delete[] auxIP;
+    delete[] clientPort;
+    delete[] auxPort;
+
+    return codeResult;
   }
 
   void checkDatagram(int sock) {
