@@ -47,8 +47,10 @@ struct timespec now; // auxiliary struct to store current time
 // Active players' info.
 struct sockaddr_in clientAddress[DATA_ARR_SIZE];
 time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
+uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
+uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
+std::string playerName[DATA_ARR_SIZE]; // players' names
 u_short activePlayersNum = 0;
-
 struct sockaddr_in auxClientAddress;
 struct sockaddr_in auxSockInfo;
 socklen_t clientAddressLen, rcvaLen, sndaLen;
@@ -207,9 +209,31 @@ namespace {
 # warning TODO STUFF
   }
 
-  void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEvenNo,
+  inline int findFreeIndex() {
+    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
+      if (lastActivity[i] == 0) {
+        return i;
+      }
+    }
+
+    return ERROR;
+  }
+
+  void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEventNo,
                         std::string const &auxPlayerName) {
-# warning TODO STUFF
+    // find free index in the data array
+    int index = findFreeIndex();
+
+    // new activity being made
+    getCurrentTime();
+    lastActivity[index] = now.tv_nsec;
+
+    // set data
+    sessionId[index] = auxSessionId;
+    turnDirection[index] = auxTurnDirection;
+    playerName[index] = auxPlayerName;
+
+#warning DO NOT KNOW YET WHAT TO DO WITH EXPECTED EVENT NO
   }
 
   void checkDatagram(int sock) {
