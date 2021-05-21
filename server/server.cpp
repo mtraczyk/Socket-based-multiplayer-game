@@ -25,6 +25,12 @@
 #define BUFFER_SIZE 1024
 #define CLIENT_DATAGRAM_MIN_SIZE 13 // session_id + turn_direction + next_expected_event_no = 13
 #define CLIENT_DATAGRAM_MAX_SIZE 33 // session_id + turn_direction + next_expected_event_no + player_name = 33
+#define BITS_IN_A_BYTE_NUM 8 // there are eight bits in one byte
+#define EXPECTED_EVENT_NO_BLOCK_START 9 // bytes from 9 to 12 in a datagram from client set out expected_event_no
+
+/* player's name can contain ASCII from 33 to 126 */
+#define PLAYER_NAME_ASCII_BEG 33
+#define PLAYER_NAME_ASCII_END 126
 
 #define ERROR -1
 #define OK 0
@@ -120,11 +126,14 @@ namespace {
     }
   }
 
-  // Returns SUCCESS if a client is connected, ERROR when something failed, and 0 when a client isn't connected.
-  int isClientConnected() {
-    int codeResult = 0;
-    char *clientIP = new char [INET6_ADDRSTRLEN];
-    char *auxIP = new char [INET6_ADDRSTRLEN];
+  /* First number in the pair is SUCCESS if a client is connected,
+   * ERROR when something failed, and 0 when a client isn't connected. If first number is SUCCESS, the second
+   * one indicates client's index in data array, it equals -1 otherwise.
+   */
+  std::pair<int, int> isClientConnected() {
+    int codeResult = 0, clientNumber = -1;
+    char *clientIP = new char[INET6_ADDRSTRLEN];
+    char *auxIP = new char[INET6_ADDRSTRLEN];
     in_port_t clientPort;
     in_port_t auxPort = auxClientAddress.sin_port;
 
@@ -142,6 +151,7 @@ namespace {
           clientPort = clientAddress[i].sin_port;
           if (std::string(auxIP) == std::string(clientIP) && auxPort == clientPort) {
             codeResult = SUCCESS;
+            clientNumber = i;
             break;
           }
         }
@@ -153,19 +163,72 @@ namespace {
     delete[] clientIP;
     delete[] auxIP;
 
-    return codeResult;
+    return {codeResult, clientNumber};
+  }
+
+  bool isDatagramCorrect(int len, uint64_t *auxSessionId, uint8_t *auxTurnDirection,
+                         uint32_t *nextExpectedEventNo, std::string &auxPlayerName) {
+    if (len >= CLIENT_DATAGRAM_MIN_SIZE && len <= CLIENT_DATAGRAM_MAX_SIZE) {
+      int bytesNumber = 8; // uint64_t has 8 bytes
+
+      // numbers in datagram are big endian
+      for (int i = 0; i < bytesNumber; i++) {
+        *auxSessionId += ((uint64_t) buffer[i] << (bytesNumber * BITS_IN_A_BYTE_NUM - (i + 1) * BITS_IN_A_BYTE_NUM));
+      }
+
+      *auxTurnDirection = (uint8_t) buffer[8]; // eighth byte of a datagram sets out turn direction
+      if (!(*auxTurnDirection >= 0 && *auxTurnDirection <= 1)) {
+        return false;
+      }
+
+      bytesNumber = 4; // uint32_t has four bytes
+      // bytes 9 to 12 set out expected_event_no
+      for (int i = EXPECTED_EVENT_NO_BLOCK_START; i < 9 + bytesNumber; i++) {
+        *nextExpectedEventNo += ((uint32_t) buffer[i]
+          << (bytesNumber * BITS_IN_A_BYTE_NUM - (i + 1) * BITS_IN_A_BYTE_NUM));
+      }
+
+      // player name block starts with byte number 13
+      for (int i = EXPECTED_EVENT_NO_BLOCK_START + bytesNumber; i < len; i++) {
+        if (!(buffer[i] >= PLAYER_NAME_ASCII_BEG && buffer[i] <= PLAYER_NAME_ASCII_END)) {
+          return false;
+        }
+
+        auxPlayerName += buffer[i];
+      }
+    }
+
+    return false;
   }
 
   void checkDatagram(int sock) {
     sndaLen = sizeof(clientAddress);
     rcvaLen = sizeof(clientAddress);
     flags = 0; // we do net request anything special
+
+    for (char &i : buffer) {
+      if (i != '\0') {
+        i = '\0';
+      } else {
+        break;
+      }
+    }
     len = recvfrom(sock, buffer, sizeof(buffer), flags, (struct sockaddr *) &auxClientAddress, &rcvaLen);
 
-    // ignore len < 0, we don't want the server to fail
-    if (len >= CLIENT_DATAGRAM_MIN_SIZE && len <= CLIENT_DATAGRAM_MAX_SIZE) {
+    // variables to store client's data
+    uint64_t auxSessionId;
+    uint8_t auxTurnDirection;
+    uint32_t nextExpectedEventNo;
+    std::string auxPlayerName;
+
+    if (isDatagramCorrect(len, &auxSessionId, &auxTurnDirection, &nextExpectedEventNo, auxPlayerName)) {
+      // datagram is correct but still might be ignored
       auxSockInfo = (struct sockaddr_in) auxClientAddress;
-      if (isClientConnected() == SUCCESS || MAX_NUM_OF_PLAYERS > activePlayersNum) {
+      std::pair<int, int> clientConnected = isClientConnected();
+
+      if (clientConnected.first == SUCCESS) {
+
+      } else if (MAX_NUM_OF_PLAYERS > activePlayersNum) {
         (void) printf("%.*s\n", (int) len, buffer);
       }
     }
