@@ -201,6 +201,17 @@ namespace {
     return false;
   }
 
+  // Process a new datagram from a connected client.
+  void newDatagramFromAConnectedClient(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEvenNo,
+                                       std::string const &auxPlayerName, int indexInDataArray) {
+# warning TODO STUFF
+  }
+
+  void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEvenNo,
+                        std::string const &auxPlayerName) {
+# warning TODO STUFF
+  }
+
   void checkDatagram(int sock) {
     sndaLen = sizeof(clientAddress);
     rcvaLen = sizeof(clientAddress);
@@ -227,8 +238,11 @@ namespace {
       std::pair<int, int> clientConnected = isClientConnected();
 
       if (clientConnected.first == SUCCESS) {
-
+        newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
+                                        nextExpectedEventNo, auxPlayerName, clientConnected.second);
       } else if (MAX_NUM_OF_PLAYERS > activePlayersNum) {
+        processNewPlayer(auxSessionId, auxTurnDirection, nextExpectedEventNo, auxPlayerName);
+# warning DEBUG STUFF
         (void) printf("%.*s\n", (int) len, buffer);
       }
     }
