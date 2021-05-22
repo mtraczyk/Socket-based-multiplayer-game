@@ -2,6 +2,7 @@
 #define PARSING_FUNCTIONALITIES_H
 
 #include <cstdint>
+#include <vector>
 
 using byte = uint8_t;
 

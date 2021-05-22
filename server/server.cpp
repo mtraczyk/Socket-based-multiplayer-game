@@ -259,7 +259,7 @@ namespace {
     /* put events into one datagram */
     std::string datagram = gameIdByteArray;
     for (uint32_t i = nextExpectedEventNo; i < events().size(); i++) {
-      std::string eventByteArray = events()[i].getByteRepresentation();
+      std::string eventByteArray = (*events()[i]).getByteRepresentation();
 
       if (datagram.size() + eventByteArray.size() <= MAX_DATAGRAM_SIZE) {
         datagram += eventByteArray;

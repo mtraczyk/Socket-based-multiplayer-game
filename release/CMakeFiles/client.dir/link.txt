@@ -1,0 +1,1 @@
+/usr/bin/cc -g -Wall -Wextra   CMakeFiles/client.dir/client/main.c.o CMakeFiles/client.dir/client/err.c.o  -o client 
