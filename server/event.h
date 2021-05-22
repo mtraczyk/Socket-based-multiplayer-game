@@ -29,7 +29,7 @@ class NewGame : public Event {
 
 class Pixel : public Event {
   public:
-    virtual ~NewGame() = default;
+    virtual ~Pixel() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
     uint8_t playerNum;
@@ -39,7 +39,7 @@ class Pixel : public Event {
 
 class PlayerEliminated : public Event {
   public:
-    virtual ~NewGame() = default;
+    virtual ~PlayerEliminated() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
     uint8_t playerNum;
@@ -47,7 +47,7 @@ class PlayerEliminated : public Event {
 
 class GameOver : public Event {
   public:
-    virtual ~NewGame() = default;
+    virtual ~GameOver() = default;
     std::string getByteRepresentation() const noexcept override;
 };
 
