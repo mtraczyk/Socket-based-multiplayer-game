@@ -8,9 +8,10 @@
 
 class Event {
   public:
+    Event(uint32_t, uint8_t);
     virtual ~Event() = default;
     virtual std::string getByteRepresentation() const noexcept = 0;
-  private:
+  protected:
     uint32_t len;
     uint32_t eventNo;
     uint8_t eventType;
@@ -19,16 +20,19 @@ class Event {
 
 class NewGame : public Event {
   public:
+    using playersNameCollection = std::vector<std::string>;
+    NewGame(uint32_t, uint8_t, uint32_t, uint32_t, playersNameCollection);
     virtual ~NewGame() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
     uint32_t maxx;
     uint32_t maxy;
-    std::vector<std::string> playersNames;
+    playersNameCollection playersNames;
 };
 
 class Pixel : public Event {
   public:
+    Pixel(uint32_t, uint8_t, uint8_t, uint32_t, uint32_t);
     virtual ~Pixel() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
@@ -39,6 +43,7 @@ class Pixel : public Event {
 
 class PlayerEliminated : public Event {
   public:
+    PlayerEliminated(uint32_t, uint8_t, uint8_t);
     virtual ~PlayerEliminated() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
@@ -47,6 +52,7 @@ class PlayerEliminated : public Event {
 
 class GameOver : public Event {
   public:
+    GameOver(uint32_t, uint8_t);
     virtual ~GameOver() = default;
     std::string getByteRepresentation() const noexcept override;
 };
