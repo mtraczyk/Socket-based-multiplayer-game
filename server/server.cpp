@@ -9,6 +9,7 @@
 #include <utility>
 #include <string>
 #include <iostream>
+#include <set>
 
 #include "server.h"
 #include "err.h"
@@ -44,19 +45,30 @@ nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 struct itimerspec newValue[DATA_ARR_SIZE];
 struct timespec now; // auxiliary struct to store current time
 
-// Active players' info.
+// active players' info.
 struct sockaddr_in clientAddress[DATA_ARR_SIZE];
 time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
 uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
 uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
 std::string playerName[DATA_ARR_SIZE]; // players' names
+bool takesPartInTheCurrentGame[DATA_ARR_SIZE]; // does some certain player, play the current game
+bool gamePlayed = false; // indicates whether a game is being played
 u_short activePlayersNum = 0;
+
+
+// socket connection data
 struct sockaddr_in auxClientAddress;
 struct sockaddr_in auxSockInfo;
 socklen_t clientAddressLen, rcvaLen, sndaLen;
 int flags, sndFlags, len;
 
 namespace {
+  // global structure used to store info about used names
+  inline std::set<std::pair<std::string, int>> &namesUsed() {
+    static auto *s = new std::set<std::pair<std::string, int>();
+    return *s;
+  }
+
   void setPollfdArray(int sock) {
     pfds[0].fd = sock; // first descriptor in the array is socket's descriptor
     pfds[0].events = POLLIN; // poll will be done for POLLIN
@@ -119,6 +131,7 @@ namespace {
             // disconnected
             activePlayersNum--; // update number of players
             lastActivity[i] = 0;
+            namesUsed().erase({playerName[i], i});
             disarmATimer(i);
           }
         } else { /* POLLERR | POLLHUP */
@@ -203,10 +216,30 @@ namespace {
     return false;
   }
 
+  void sendDatagrams(uint32_t nextExpectedEvenNo) {
+#warning TODO
+    for (int i = 0; i < nextExpectedEvenNo; i++) {
+      // send events
+    }
+  }
+
   // Process a new datagram from a connected client.
   void newDatagramFromAConnectedClient(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEvenNo,
                                        std::string const &auxPlayerName, int indexInDataArray) {
-# warning TODO STUFF
+    // here auxSessionId <= sessionId[indexInDataArray]
+    if (auxSessionId == sessionId[indexInDataArray] &&
+        namesUsed().find({auxPlayerName, indexInDataArray}) != namesUsed().end()) {
+      // datagram isn't ignored
+      getCurrentTime();
+      lastActivity[indexInDataArray] = now.tv_nsec;
+      turnDirection[indexInDataArray] = auxTurnDirection;
+
+      if (gamePlayed && !takesPartInTheCurrentGame[indexInDataArray]) {
+        sendDatagrams(0);
+      } else {
+        sendDatagrams(nextExpectedEvenNo);
+      }
+    }
   }
 
   inline int findFreeIndex() {
@@ -232,8 +265,12 @@ namespace {
     sessionId[index] = auxSessionId;
     turnDirection[index] = auxTurnDirection;
     playerName[index] = auxPlayerName;
+    namesUsed().insert({auxPlayerName, index});
 
-#warning DO NOT KNOW YET WHAT TO DO WITH EXPECTED EVENT NO
+    if (gamePlayed) {
+      // player is a spectator in the current game, send him all of the datagrams connected to the current match
+      sendDatagrams(0);
+    }
   }
 
   void checkDatagram(int sock) {
@@ -261,7 +298,7 @@ namespace {
       auxSockInfo = (struct sockaddr_in) auxClientAddress;
       std::pair<int, int> clientConnected = isClientConnected();
 
-      if (clientConnected.first == SUCCESS) {
+      if (clientConnected.first == SUCCESS && auxSessionId <= sessionId[clientConnected.second]) {
         newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
                                         nextExpectedEventNo, auxPlayerName, clientConnected.second);
       } else if (MAX_NUM_OF_PLAYERS > activePlayersNum) {
@@ -270,6 +307,10 @@ namespace {
         (void) printf("%.*s\n", (int) len, buffer);
       }
     }
+  }
+
+  void newGame() {
+
   }
 }
 
@@ -308,6 +349,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
     checkNextTurn(NANO_SEC / roundsPerSecond);
     checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
+    newGame(); // check the possibility of starting a new game
   }
 
   if (close(sock) == -1) { // very rare errors can occur here, but then
