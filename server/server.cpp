@@ -11,6 +11,7 @@
 #include <iostream>
 #include <set>
 #include <vector>
+#include <cmath>
 
 #include "server.h"
 #include "err.h"
@@ -49,6 +50,7 @@
 #define PIXEL 1
 #define PLAYER_ELIMINATED 2
 #define GAME_OVER 3
+#define FULL_CIRCLE 360
 
 char buffer[BUFFER_SIZE];
 
@@ -65,7 +67,8 @@ uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
 uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
 std::string playerName[DATA_ARR_SIZE]; // players' names
 bool takesPartInTheCurrentGame[DATA_ARR_SIZE]; // does some certain player, play the current game
-double playerWormX[DATA_ARR_SIZE], playerWormY[DATA_ARR_SIZE];
+double playerWormX[DATA_ARR_SIZE], playerWormY[DATA_ARR_SIZE], playerDirection[DATA_ARR_SIZE];
+uint32_t roundedPlayerWormX[DATA_ARR_SIZE], roundedPlayerWormY[DATA_ARR_SIZE];
 u_short activePlayersNum = 0;
 
 // game info
@@ -88,8 +91,14 @@ namespace {
   }
 
   // global structure used to store events that occurred in the current game
-  inline std::vector<Event*> &events() {
-    static auto *s = new std::vector<Event*>();
+  inline std::vector<Event *> &events() {
+    static auto *s = new std::vector<Event *>();
+    return *s;
+  }
+
+  // global structure used to store info about used squares
+  inline std::set<std::pair<uint32_t, uint32_t>> &squaresUsed() {
+    static auto *s = new std::set<std::pair<uint32_t, uint32_t>>();
     return *s;
   }
 
@@ -372,17 +381,59 @@ namespace {
     return currentRandomNumber;
   }
 
-  void newGame(uint32_t boardWidth, uint32_t boardHeight) {
+  inline void addPlayerEliminatedEvent(uint8_t playerNum) {
+    Event *aux = new PlayerEliminated(events().size(), PLAYER_ELIMINATED, playerNum);
+    events().push_back(aux);
+  }
+
+  inline void addPixelEvent(uint8_t playerNum, uint32_t x, uint32_t y) {
+    Event *aux = new Pixel(events().size(), PIXEL, playerNum, x, y);
+    events().push_back(aux);
+  }
+
+  // send new event to all the players
+  void sendEvent(int sock) {
+    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
+      if (lastActivity[i] != 0) {
+        auxClientAddress = clientAddress[i];
+        sendDatagrams(events().size(), sock);
+      }
+    }
+  }
+
+  void newGame(uint32_t boardWidth, uint32_t boardHeight, int sock) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
+      for (auto u : events()) {
+        delete u;
+      }
+
       events().clear(); // new game, delete events from a previous game
+      squaresUsed().clear(); // new game, clear the board
       gameId = deterministicRand();
       std::vector<std::string> players(namesUsed().begin(), namesUsed().end());
 
       Event *aux = new NewGame(0, NEW_GAME, boardWidth, boardHeight, players);
       events().push_back(aux);
+      sendEvent(sock);
 
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
         takesPartInTheCurrentGame[i] = lastActivity[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
+
+        if (takesPartInTheCurrentGame[i]) {
+          playerWormX[i] = (deterministicRand() % boardWidth) + 0.5;
+          playerWormY[i] = (deterministicRand() % boardHeight) + 0.5;
+          roundedPlayerWormX[i] = std::round(playerWormX[i]);
+          roundedPlayerWormY[i] = std::round(playerWormY[i]);
+          playerDirection[i] = deterministicRand() % FULL_CIRCLE;
+
+          if (squaresUsed().find({roundedPlayerWormX[i], roundedPlayerWormY[i]}) != squaresUsed().end()) {
+            addPlayerEliminatedEvent(i);
+          } else {
+            squaresUsed().insert({roundedPlayerWormX[i], roundedPlayerWormY[i]});
+            addPixelEvent(i, roundedPlayerWormX[i], roundedPlayerWormY[i]);
+          }
+          sendEvent(sock);
+        }
       }
     }
   }
@@ -424,7 +475,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
     checkNextTurn(NANO_SEC / roundsPerSecond);
     checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
-    newGame(boardWidth, boardHeight); // check the possibility of starting a new game
+    newGame(boardWidth, boardHeight, sock); // check the possibility of starting a new game
   }
 
   if (close(sock) == -1) { // very rare errors can occur here, but then
