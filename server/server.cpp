@@ -10,9 +10,11 @@
 #include <string>
 #include <iostream>
 #include <set>
+#include <vector>
 
 #include "server.h"
 #include "err.h"
+#include "event.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known
 #define MIN_NUM_OF_PLAYERS_TO_START_A_GAME 2 // minimum number of players to start a game
@@ -21,6 +23,7 @@
  * One additional is needed for the server's socket, and one more for a turn timer.
  */
 #define DATA_ARR_SIZE MAX_NUM_OF_PLAYERS + 2
+#define MAX_DATAGRAM_SIZE 550 // datagram can be long up to 550
 #define DIS_TIME_SEC 2 // disconnection time in seconds
 #define NANO_SEC 1000000000 // one nanosecond
 #define DIS_TIME_NANO 2 * NANO_SEC // disconnection time in nanoseconds
@@ -53,9 +56,11 @@ uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
 uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
 std::string playerName[DATA_ARR_SIZE]; // players' names
 bool takesPartInTheCurrentGame[DATA_ARR_SIZE]; // does some certain player, play the current game
-bool gamePlayed = false; // indicates whether a game is being played
 u_short activePlayersNum = 0;
 
+// game info
+bool gamePlayed = false; // indicates whether a game is being played
+uint32_t gameId; // every game has a randomly generated id
 
 // socket connection data
 struct sockaddr_in auxClientAddress;
@@ -64,9 +69,23 @@ socklen_t clientAddressLen, rcvaLen, sndaLen;
 int flags, sndFlags, len;
 
 namespace {
+  using byte = uint8_t;
+
+  template<typename T>
+  std::vector<byte> toByte(T input) {
+    byte *bytePointer = reinterpret_cast<byte *>(&input);
+    return std::vector<byte>(bytePointer, bytePointer + sizeof(T));
+  }
+
   // global structure used to store info about used names
   inline std::set<std::pair<std::string, int>> &namesUsed() {
     static auto *s = new std::set<std::pair<std::string, int>>();
+    return *s;
+  }
+
+  // global structure used to store events that occurred in the current game
+  inline std::vector<Event> &events() {
+    static auto *s = new std::vector<Event>();
     return *s;
   }
 
@@ -217,16 +236,43 @@ namespace {
     return false;
   }
 
-  void sendDatagrams(uint32_t nextExpectedEvenNo) {
-#warning TODO
-    for (int i = 0; i < nextExpectedEvenNo; i++) {
-      // send events
+  void sendDatagram(std::string const &datagram, int sock) {
+    const char *message = datagram.c_str();
+
+    int sendFlags = 0;
+    sndaLen = (socklen_t) sizeof(auxClientAddress);
+    /* Ignore errors, we don't want the server to go down.
+     * sock is non blocking.
+     */
+    sendto(sock, message, sizeof(message), sendFlags, (struct sockaddr *) &auxClientAddress, sndaLen);
+  }
+
+  void sendDatagrams(uint32_t nextExpectedEventNo, int sock) {
+    uint32_t tmp = htonl(gameId); // convert to big endian
+    auto byteVector = toByte(tmp);
+    std::string gameIdByteArray(byteVector.begin(), byteVector.end());
+
+    /* put events into one datagram */
+    std::string datagram = gameIdByteArray;
+    for (uint32_t i = nextExpectedEventNo; i < events().size(); i++) {
+      std::string eventByteArray = events()[i].getByteRepresentation();
+
+      if (datagram.size() + eventByteArray.size() <= MAX_DATAGRAM_SIZE) {
+        datagram += eventByteArray;
+      } else {
+        sendDatagram(eventByteArray, sock);
+        datagram = gameIdByteArray + eventByteArray;
+      }
+    }
+
+    if (!datagram.empty()) {
+      sendDatagram(datagram, sock);
     }
   }
 
   // Process a new datagram from a connected client.
   void newDatagramFromAConnectedClient(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEvenNo,
-                                       std::string const &auxPlayerName, int indexInDataArray) {
+                                       std::string const &auxPlayerName, int indexInDataArray, int sock) {
     // here auxSessionId <= sessionId[indexInDataArray]
     if (auxSessionId == sessionId[indexInDataArray] &&
         namesUsed().find({auxPlayerName, indexInDataArray}) != namesUsed().end()) {
@@ -234,7 +280,7 @@ namespace {
       getCurrentTime();
       lastActivity[indexInDataArray] = now.tv_nsec;
       turnDirection[indexInDataArray] = auxTurnDirection;
-      sendDatagrams(nextExpectedEvenNo);
+      sendDatagrams(nextExpectedEvenNo, sock);
     }
   }
 
@@ -249,7 +295,7 @@ namespace {
   }
 
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEventNo,
-                        std::string const &auxPlayerName) {
+                        std::string const &auxPlayerName, int sock) {
     // find free index in the data array
     int index = findFreeIndex();
 
@@ -265,7 +311,7 @@ namespace {
 
     if (gamePlayed) {
       // player is a spectator in the current game, send him all of the datagrams connected to the current match
-      sendDatagrams(0);
+      sendDatagrams(0, sock);
     }
   }
 
@@ -296,9 +342,9 @@ namespace {
 
       if (clientConnected.first == SUCCESS && auxSessionId <= sessionId[clientConnected.second]) {
         newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
-                                        nextExpectedEventNo, auxPlayerName, clientConnected.second);
+                                        nextExpectedEventNo, auxPlayerName, clientConnected.second, sock);
       } else if (MAX_NUM_OF_PLAYERS > activePlayersNum) {
-        processNewPlayer(auxSessionId, auxTurnDirection, nextExpectedEventNo, auxPlayerName);
+        processNewPlayer(auxSessionId, auxTurnDirection, nextExpectedEventNo, auxPlayerName, sock);
 # warning DEBUG STUFF
         (void) printf("%.*s\n", (int) len, buffer);
       }
