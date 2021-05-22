@@ -65,6 +65,7 @@ uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
 uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
 std::string playerName[DATA_ARR_SIZE]; // players' names
 bool takesPartInTheCurrentGame[DATA_ARR_SIZE]; // does some certain player, play the current game
+double playerWormX[DATA_ARR_SIZE], playerWormY[DATA_ARR_SIZE];
 u_short activePlayersNum = 0;
 
 // game info
@@ -87,8 +88,8 @@ namespace {
   }
 
   // global structure used to store events that occurred in the current game
-  inline std::vector<Event> &events() {
-    static auto *s = new std::vector<Event>();
+  inline std::vector<Event*> &events() {
+    static auto *s = new std::vector<Event*>();
     return *s;
   }
 
@@ -371,12 +372,18 @@ namespace {
     return currentRandomNumber;
   }
 
-  void newGame(uint32_t boardWitdh, uint32_t boardHeight) {
+  void newGame(uint32_t boardWidth, uint32_t boardHeight) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
       events().clear(); // new game, delete events from a previous game
       gameId = deterministicRand();
       std::vector<std::string> players(namesUsed().begin(), namesUsed().end());
-      events().push_back(NewGame(0, NEW_GAME, boardWitdh, boardHeight, players));
+
+      Event *aux = new NewGame(0, NEW_GAME, boardWidth, boardHeight, players);
+      events().push_back(aux);
+
+      for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
+        takesPartInTheCurrentGame[i] = lastActivity[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
+      }
     }
   }
 }
