@@ -15,6 +15,7 @@
 #include "server.h"
 #include "err.h"
 #include "event.h"
+#include "parsing_functionalities.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known
 #define MIN_NUM_OF_PLAYERS_TO_START_A_GAME 2 // minimum number of players to start a game
@@ -69,14 +70,6 @@ socklen_t clientAddressLen, rcvaLen, sndaLen;
 int flags, sndFlags, len;
 
 namespace {
-  using byte = uint8_t;
-
-  template<typename T>
-  std::vector<byte> toByte(T input) {
-    byte *bytePointer = reinterpret_cast<byte *>(&input);
-    return std::vector<byte>(bytePointer, bytePointer + sizeof(T));
-  }
-
   // global structure used to store info about used names
   inline std::set<std::pair<std::string, int>> &namesUsed() {
     static auto *s = new std::set<std::pair<std::string, int>>();

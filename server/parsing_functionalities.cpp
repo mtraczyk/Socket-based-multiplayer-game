@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <limits>
+#include <vector>
 #include "parsing_functionalities.h"
 
 #define OK 0
@@ -113,4 +114,10 @@ int setProgramParameters(int argc, char *const argv[], uint32_t *portNum, int64_
   }
 
   return OK;
+}
+
+template<typename T>
+std::vector<byte> toByte(T input) {
+  byte *bytePointer = reinterpret_cast<byte *>(&input);
+  return std::vector<byte>(bytePointer, bytePointer + sizeof(T));
 }

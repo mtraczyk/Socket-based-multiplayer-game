@@ -1,4 +1,11 @@
 #include "event.h"
+#include "parsing_functionalities.h"
+
+namespace {
+  uint32_t crc32(std::string const &input) {
+    return 0;
+  }
+}
 
 std::string NewGame::getByteRepresentation() const noexcept {
   return std::string();

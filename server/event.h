@@ -13,10 +13,8 @@ class Event {
     virtual ~Event() = default;
     virtual std::string getByteRepresentation() const noexcept = 0;
   protected:
-    uint32_t len;
     uint32_t eventNo;
     uint8_t eventType;
-    uint32_t crc32;
 };
 
 class NewGame : public Event {

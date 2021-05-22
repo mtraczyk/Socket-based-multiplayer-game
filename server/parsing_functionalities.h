@@ -3,8 +3,13 @@
 
 #include <cstdint>
 
+using byte = uint8_t;
+
 // Sets program parameters, if some parameter is incorrect returns -1, otherwise returns 0.
 int setProgramParameters(int argc, char *const argv[], uint32_t *, int64_t *,
                          int64_t *, uint32_t *, uint32_t *, uint32_t *);
+
+template<typename T>
+std::vector<byte> toByte(T input);
 
 #endif /* PARSING_FUNCTIONALITIES_H */
