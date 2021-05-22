@@ -2,6 +2,7 @@
 #define EVENT_H
 
 
+#include <utility>
 #include <vector>
 #include <string>
 
@@ -22,8 +23,8 @@ class NewGame : public Event {
     using playersNameCollection = std::vector<std::string>;
 
     NewGame(uint32_t mEventNo, uint8_t mEventType, uint32_t mMaxx, uint32_t mMaxy,
-            std::initializer_list<std::string> mPlayersNames) : Event(mEventNo, mEventType), maxx(mMaxx), maxy(mMaxy),
-                                                                playersNames(mPlayersNames) {}
+            playersNameCollection mPlayersNames) : Event(mEventNo, mEventType), maxx(mMaxx), maxy(mMaxy),
+                                                                playersNames(std::move(mPlayersNames)) {}
 
     virtual ~NewGame() = default;
     std::string getByteRepresentation() const noexcept override;

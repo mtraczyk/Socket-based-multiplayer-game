@@ -42,6 +42,14 @@
 #define OK 0
 #define SUCCESS 1
 
+#define RAND_MULTIPLIER 279410273
+#define RAND_MODULO 4294967291
+
+#define NEW_GAME 0
+#define PIXEL 1
+#define PLAYER_ELIMINATED 2
+#define GAME_OVER 3
+
 char buffer[BUFFER_SIZE];
 
 struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
@@ -69,10 +77,12 @@ struct sockaddr_in auxSockInfo;
 socklen_t clientAddressLen, rcvaLen, sndaLen;
 int flags, sndFlags, len;
 
+int64_t randomNumber;
+
 namespace {
   // global structure used to store info about used names
-  inline std::set<std::pair<std::string, int>> &namesUsed() {
-    static auto *s = new std::set<std::pair<std::string, int>>();
+  inline std::set<std::string> &namesUsed() {
+    static auto *s = new std::set<std::string>();
     return *s;
   }
 
@@ -144,7 +154,7 @@ namespace {
             // disconnected
             activePlayersNum--; // update number of players
             lastActivity[i] = 0;
-            namesUsed().erase({playerName[i], i});
+            namesUsed().erase(playerName[i]);
             disarmATimer(i);
           }
         } else { /* POLLERR | POLLHUP */
@@ -267,8 +277,7 @@ namespace {
   void newDatagramFromAConnectedClient(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEvenNo,
                                        std::string const &auxPlayerName, int indexInDataArray, int sock) {
     // here auxSessionId <= sessionId[indexInDataArray]
-    if (auxSessionId == sessionId[indexInDataArray] &&
-        namesUsed().find({auxPlayerName, indexInDataArray}) != namesUsed().end()) {
+    if (auxSessionId == sessionId[indexInDataArray] && namesUsed().find(auxPlayerName) != namesUsed().end()) {
       // datagram isn't ignored
       getCurrentTime();
       lastActivity[indexInDataArray] = now.tv_nsec;
@@ -287,8 +296,7 @@ namespace {
     return ERROR;
   }
 
-  void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEventNo,
-                        std::string const &auxPlayerName, int sock) {
+  void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
     // find free index in the data array
     int index = findFreeIndex();
 
@@ -300,7 +308,9 @@ namespace {
     sessionId[index] = auxSessionId;
     turnDirection[index] = auxTurnDirection;
     playerName[index] = auxPlayerName;
-    namesUsed().insert({auxPlayerName, index});
+    if (!auxPlayerName.empty()) {
+      namesUsed().insert(auxPlayerName);
+    }
 
     if (gamePlayed) {
       // player is a spectator in the current game, send him all of the datagrams connected to the current match
@@ -337,9 +347,7 @@ namespace {
         newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
                                         nextExpectedEventNo, auxPlayerName, clientConnected.second, sock);
       } else if (MAX_NUM_OF_PLAYERS > activePlayersNum) {
-        processNewPlayer(auxSessionId, auxTurnDirection, nextExpectedEventNo, auxPlayerName, sock);
-# warning DEBUG STUFF
-        (void) printf("%.*s\n", (int) len, buffer);
+        processNewPlayer(auxSessionId, auxTurnDirection, auxPlayerName, sock);
       }
     }
   }
@@ -356,9 +364,19 @@ namespace {
     return counter;
   }
 
-  void newGame() {
+  uint32_t deterministicRand() {
+    uint32_t currentRandomNumber = randomNumber;
+    randomNumber = (randomNumber * RAND_MULTIPLIER) % RAND_MODULO;
+
+    return currentRandomNumber;
+  }
+
+  void newGame(uint32_t boardWitdh, uint32_t boardHeight) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
-#warning START NEW GAME
+      events().clear(); // new game, delete events from a previous game
+      gameId = deterministicRand();
+      std::vector<std::string> players(namesUsed().begin(), namesUsed().end());
+      events().push_back(NewGame(0, NEW_GAME, boardWitdh, boardHeight, players));
     }
   }
 }
@@ -368,6 +386,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
   int sock; // socket descriptor
   int ready; // variable to store poll return value
   struct sockaddr_in6 serverAddress;
+  randomNumber = seed;
 
   sock = socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, 0); // IPv6 UDP nonblock socket
 
@@ -398,7 +417,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
     checkNextTurn(NANO_SEC / roundsPerSecond);
     checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
-    newGame(); // check the possibility of starting a new game
+    newGame(boardWidth, boardHeight); // check the possibility of starting a new game
   }
 
   if (close(sock) == -1) { // very rare errors can occur here, but then
