@@ -15,6 +15,7 @@
 #include "err.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known
+#define MIN_NUM_OF_PLAYERS_TO_START_A_GAME 2 // minimum number of players to start a game
 
 /* Data arrays are of a size which equals to MAX_NUM_OF_PLAYERS + 2.
  * One additional is needed for the server's socket, and one more for a turn timer.
@@ -233,12 +234,7 @@ namespace {
       getCurrentTime();
       lastActivity[indexInDataArray] = now.tv_nsec;
       turnDirection[indexInDataArray] = auxTurnDirection;
-
-      if (gamePlayed && !takesPartInTheCurrentGame[indexInDataArray]) {
-        sendDatagrams(0);
-      } else {
-        sendDatagrams(nextExpectedEvenNo);
-      }
+      sendDatagrams(nextExpectedEvenNo);
     }
   }
 
@@ -309,8 +305,22 @@ namespace {
     }
   }
 
-  void newGame() {
+  // counts number of players that want to participate in a game
+  inline int numberOfReadyPlayers() {
+    int counter;
+    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
+      if (lastActivity[i] != 0 && !playerName[i].empty() && turnDirection[i] != 0) {
+        counter++;
+      }
+    }
 
+    return counter;
+  }
+
+  void newGame() {
+    if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
+#warning START NEW GAME
+    }
   }
 }
 
