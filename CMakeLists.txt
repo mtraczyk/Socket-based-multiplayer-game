@@ -24,6 +24,8 @@ set(SERVER_SOURCE_FILES
         server/parsing_functionalities.cpp
         server/err.h
         server/err.c
+        server/event.cpp
+        server/event.h
         )
 
 set(CLIENT_SOURCE_FILES
@@ -40,6 +42,8 @@ set(SERVER_TEST_SOURCE_FILES
         server/err.c
         server/server.h
         server/server.cpp
+        server/event.cpp
+        server/event.h
         )
 
 set(CLIENT_TEST_SOURCE_FILES

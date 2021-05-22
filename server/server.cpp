@@ -66,7 +66,7 @@ int flags, sndFlags, len;
 namespace {
   // global structure used to store info about used names
   inline std::set<std::pair<std::string, int>> &namesUsed() {
-    static auto *s = new std::set<std::pair<std::string, int>();
+    static auto *s = new std::set<std::pair<std::string, int>>();
     return *s;
   }
 
