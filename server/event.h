@@ -8,7 +8,8 @@
 
 class Event {
   public:
-    Event(uint32_t, uint8_t);
+    Event(uint32_t mEventNo, uint8_t mEventType) : eventNo(mEventNo), eventType(mEventType) {}
+
     virtual ~Event() = default;
     virtual std::string getByteRepresentation() const noexcept = 0;
   protected:
@@ -21,7 +22,11 @@ class Event {
 class NewGame : public Event {
   public:
     using playersNameCollection = std::vector<std::string>;
-    NewGame(uint32_t, uint8_t, uint32_t, uint32_t, playersNameCollection);
+
+    NewGame(uint32_t mEventNo, uint8_t mEventType, uint32_t mMaxx, uint32_t mMaxy,
+            std::initializer_list<std::string> mPlayersNames) : Event(mEventNo, mEventType), maxx(mMaxx), maxy(mMaxy),
+                                                                playersNames(mPlayersNames) {}
+
     virtual ~NewGame() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
@@ -32,7 +37,9 @@ class NewGame : public Event {
 
 class Pixel : public Event {
   public:
-    Pixel(uint32_t, uint8_t, uint8_t, uint32_t, uint32_t);
+    Pixel(uint32_t mEventNo, uint8_t mEventType, uint8_t mPlayerNum, uint32_t mX, uint32_t mY) :
+      Event(mEventNo, mEventType), playerNum(mPlayerNum), x(mX), y(mY) {}
+
     virtual ~Pixel() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
@@ -43,7 +50,8 @@ class Pixel : public Event {
 
 class PlayerEliminated : public Event {
   public:
-    PlayerEliminated(uint32_t, uint8_t, uint8_t);
+    PlayerEliminated(uint32_t mEventNo, uint8_t mEventType, uint8_t mPlayerNum) : Event(mEventNo, mEventType),
+                                                                                  playerNum(mPlayerNum) {};
     virtual ~PlayerEliminated() = default;
     std::string getByteRepresentation() const noexcept override;
   private:
@@ -52,7 +60,8 @@ class PlayerEliminated : public Event {
 
 class GameOver : public Event {
   public:
-    GameOver(uint32_t, uint8_t);
+    GameOver(uint32_t mEventNo, uint8_t mEventType) : Event(mEventNo, mEventType) {}
+
     virtual ~GameOver() = default;
     std::string getByteRepresentation() const noexcept override;
 };
