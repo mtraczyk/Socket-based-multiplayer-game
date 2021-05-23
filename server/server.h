@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-void server(uint32_t, int64_t, int64_t, uint32_t, uint32_t, uint32_t);
+void server(uint16_t, int64_t, uint8_t, uint8_t, uint16_t, uint16_t);
 
 
 #endif /* SERVER_H */

@@ -7,8 +7,8 @@
 using byte = uint8_t;
 
 // Sets program parameters, if some parameter is incorrect returns -1, otherwise returns 0.
-int setProgramParameters(int argc, char *const argv[], uint32_t *, int64_t *,
-                         int64_t *, uint32_t *, uint32_t *, uint32_t *);
+int setProgramParameters(int argc, char *const argv[], uint16_t *, int64_t *,
+                         uint8_t *, uint8_t *, uint16_t *, uint16_t *);
 
 template<typename T>
 std::vector<byte> toByte(T input) {

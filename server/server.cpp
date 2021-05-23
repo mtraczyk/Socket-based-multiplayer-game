@@ -90,7 +90,7 @@ int64_t randomNumber;
 
 namespace {
   void addPlayerEliminatedEvent(uint8_t playerNum);
-  void addPixelEvent(uint8_t playerNum, uint32_t x, uint32_t y);
+  void addPixelEvent(uint8_t playerNum, uint16_t x, uint16_t y);
   void sendEvent(int sock);
 
   // global structure used to store info about used names
@@ -106,8 +106,8 @@ namespace {
   }
 
   // global structure used to store info about used squares
-  inline std::set<std::pair<uint32_t, uint32_t>> &squaresUsed() {
-    static auto *s = new std::set<std::pair<uint32_t, uint32_t>>();
+  inline std::set<std::pair<uint16_t, uint16_t>> &squaresUsed() {
+    static auto *s = new std::set<std::pair<uint16_t, uint16_t>>();
     return *s;
   }
 
@@ -133,13 +133,13 @@ namespace {
     return x >= 0 && y >= 0 && x <= boardWidth && y <= boardHeight;
   }
 
-  void performNextTurn(int64_t turningSpeed, uint32_t boardWidth, uint32_t boardHeight, int sock) {
+  void performNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (takesPartInTheCurrentGame[i]) {
         if (turnDirection[i] == LEFT_ARR) {
-          playerDirection[i] += turningSpeed;
+          playerDirection[i] += (double)turningSpeed;
         } else if (turnDirection[i] == RIGHT_ARR) {
-          playerDirection[i] -= turningSpeed;
+          playerDirection[i] -= (double)turningSpeed;
         }
 
         playerWormX[i] += cos(angleToRadian(playerDirection[i]));
@@ -172,9 +172,7 @@ namespace {
     }
   }
 
-#warning TURNING SPEED
-
-  void checkNextTurn(time_t nanoSecPeriod, int64_t turningSpeed, uint32_t boardWidth, uint32_t boardHeight, int sock) {
+  void checkNextTurn(time_t nanoSecPeriod, uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         getCurrentTime();
@@ -381,7 +379,7 @@ namespace {
     rcvaLen = sizeof(clientAddress);
     flags = 0; // we do net request anything special
 
-    for (char &i : buffer) {
+    for (char &i : buffer) { // clean buffer
       if (i != '\0') {
         i = '\0';
       } else {
@@ -501,12 +499,12 @@ namespace {
   }
 }
 
-void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
-            uint32_t roundsPerSecond, uint32_t boardWidth, uint32_t boardHeight) {
+void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
+            uint8_t roundsPerSecond, uint16_t boardWidth, uint16_t boardHeight) {
   int sock; // socket descriptor
   int ready; // variable to store poll return value
   struct sockaddr_in6 serverAddress;
-  randomNumber = seed;
+  randomNumber = seed; // first random number equals to the seed's value
 
   sock = socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, 0); // IPv6 UDP nonblock socket
 

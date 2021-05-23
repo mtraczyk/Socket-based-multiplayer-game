@@ -14,6 +14,16 @@
 #define ROUNDS_PER_SEC 'v'
 #define WIDTH 'w'
 #define HEIGHT 'h'
+#define MIN_PORT 0
+#define MAX_PORT 65535
+#define MIN_TURNING 1
+#define MAX_TURNING 45
+#define MIN_VEL 1
+#define MAX_VEL 250
+#define MIN_WIDTH 128
+#define MAX_WIDTH 1920
+#define MIN_HEIGHT 128
+#define MAX_HEIGHT 1920
 
 namespace {
   /* atoi like function, with constraints on minimum and maximum value.
@@ -69,7 +79,7 @@ int setProgramParameters(int argc, char *const argv[], uint32_t *portNum, int64_
 
     switch (option) {
       case PORT:
-        if (numFromArg(&auxValue, optarg, 0, std::numeric_limits<uint16_t>::max()) < 0) {
+        if (numFromArg(&auxValue, optarg, MIN_PORT, MAX_PORT) < 0) {
           return ERROR;
         }
         *portNum = auxValue;
@@ -82,26 +92,25 @@ int setProgramParameters(int argc, char *const argv[], uint32_t *portNum, int64_
         *seed = auxValue;
         break;
       case TURNING_SPEED:
-        if (numFromArg(&auxValue, optarg, std::numeric_limits<int32_t>::min(),
-                       std::numeric_limits<uint32_t>::max()) < 0) {
+        if (numFromArg(&auxValue, optarg, MIN_TURNING, MAX_TURNING) < 0) {
           return ERROR;
         }
         *turningSpeed = auxValue;
         break;
       case ROUNDS_PER_SEC:
-        if (numFromArg(&auxValue, optarg, 0, std::numeric_limits<uint16_t>::max()) < 0) {
+        if (numFromArg(&auxValue, optarg, MIN_VEL, MAX_VEL) < 0) {
           return ERROR;
         }
         *roundsPerSecond = auxValue;
         break;
       case WIDTH:
-        if (numFromArg(&auxValue, optarg, 0, std::numeric_limits<uint32_t>::max()) < 0) {
+        if (numFromArg(&auxValue, optarg, MIN_WIDTH, MAX_WIDTH) < 0) {
           return ERROR;
         }
         *boardWidth = auxValue;
         break;
       case HEIGHT:
-        if (numFromArg(&auxValue, optarg, 0, std::numeric_limits<uint32_t>::max()) < 0) {
+        if (numFromArg(&auxValue, optarg, MIN_HEIGHT, MAX_HEIGHT) < 0) {
           return ERROR;
         }
         *boardHeight = auxValue;
@@ -109,8 +118,6 @@ int setProgramParameters(int argc, char *const argv[], uint32_t *portNum, int64_
       default:
         return ERROR;
     }
-
-    std::cout << (char) option << " " << auxValue << std::endl;
   }
 
   return OK;
