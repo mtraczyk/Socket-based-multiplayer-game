@@ -4,8 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/michal/CLionProjects/zadanie2SIK/client/err.c" "/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/client.dir/client/err.c.o"
   "/home/michal/CLionProjects/zadanie2SIK/client/main.c" "/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/client.dir/client/main.c.o"
+  "/home/michal/CLionProjects/zadanie2SIK/err/err.c" "/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/client.dir/err/err.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

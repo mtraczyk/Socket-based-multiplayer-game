@@ -3,16 +3,16 @@
 
 CMakeFiles/server.dir/crc32/crc32.c.o
  /home/michal/CLionProjects/zadanie2SIK/crc32/crc32.c
-CMakeFiles/server.dir/server/err.c.o
- /home/michal/CLionProjects/zadanie2SIK/server/err.c
- /home/michal/CLionProjects/zadanie2SIK/server/err.h
+CMakeFiles/server.dir/err/err.c.o
+ /home/michal/CLionProjects/zadanie2SIK/err/err.c
+ /home/michal/CLionProjects/zadanie2SIK/err/err.h
 CMakeFiles/server.dir/server/event.cpp.o
  /home/michal/CLionProjects/zadanie2SIK/crc32/crc32.h
  /home/michal/CLionProjects/zadanie2SIK/server/event.cpp
  /home/michal/CLionProjects/zadanie2SIK/server/event.h
  /home/michal/CLionProjects/zadanie2SIK/server/parsing_functionalities.h
 CMakeFiles/server.dir/server/main.cpp.o
- /home/michal/CLionProjects/zadanie2SIK/server/err.h
+ /home/michal/CLionProjects/zadanie2SIK/err/err.h
  /home/michal/CLionProjects/zadanie2SIK/server/main.cpp
  /home/michal/CLionProjects/zadanie2SIK/server/parsing_functionalities.h
  /home/michal/CLionProjects/zadanie2SIK/server/server.h
@@ -20,7 +20,7 @@ CMakeFiles/server.dir/server/parsing_functionalities.cpp.o
  /home/michal/CLionProjects/zadanie2SIK/server/parsing_functionalities.cpp
  /home/michal/CLionProjects/zadanie2SIK/server/parsing_functionalities.h
 CMakeFiles/server.dir/server/server.cpp.o
- /home/michal/CLionProjects/zadanie2SIK/server/err.h
+ /home/michal/CLionProjects/zadanie2SIK/err/err.h
  /home/michal/CLionProjects/zadanie2SIK/server/event.h
  /home/michal/CLionProjects/zadanie2SIK/server/parsing_functionalities.h
  /home/michal/CLionProjects/zadanie2SIK/server/server.cpp

@@ -6,7 +6,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
   "/home/michal/CLionProjects/zadanie2SIK/crc32/crc32.c" "/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/server.dir/crc32/crc32.c.o"
-  "/home/michal/CLionProjects/zadanie2SIK/server/err.c" "/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/server.dir/server/err.c.o"
+  "/home/michal/CLionProjects/zadanie2SIK/err/err.c" "/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/server.dir/err/err.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

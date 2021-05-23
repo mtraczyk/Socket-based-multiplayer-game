@@ -3,15 +3,15 @@
 
 CMakeFiles/server.dir/crc32/crc32.c.o: ../crc32/crc32.c
 
-CMakeFiles/server.dir/server/err.c.o: ../server/err.c
-CMakeFiles/server.dir/server/err.c.o: ../server/err.h
+CMakeFiles/server.dir/err/err.c.o: ../err/err.c
+CMakeFiles/server.dir/err/err.c.o: ../err/err.h
 
 CMakeFiles/server.dir/server/event.cpp.o: ../crc32/crc32.h
 CMakeFiles/server.dir/server/event.cpp.o: ../server/event.cpp
 CMakeFiles/server.dir/server/event.cpp.o: ../server/event.h
 CMakeFiles/server.dir/server/event.cpp.o: ../server/parsing_functionalities.h
 
-CMakeFiles/server.dir/server/main.cpp.o: ../server/err.h
+CMakeFiles/server.dir/server/main.cpp.o: ../err/err.h
 CMakeFiles/server.dir/server/main.cpp.o: ../server/main.cpp
 CMakeFiles/server.dir/server/main.cpp.o: ../server/parsing_functionalities.h
 CMakeFiles/server.dir/server/main.cpp.o: ../server/server.h
@@ -19,7 +19,7 @@ CMakeFiles/server.dir/server/main.cpp.o: ../server/server.h
 CMakeFiles/server.dir/server/parsing_functionalities.cpp.o: ../server/parsing_functionalities.cpp
 CMakeFiles/server.dir/server/parsing_functionalities.cpp.o: ../server/parsing_functionalities.h
 
-CMakeFiles/server.dir/server/server.cpp.o: ../server/err.h
+CMakeFiles/server.dir/server/server.cpp.o: ../err/err.h
 CMakeFiles/server.dir/server/server.cpp.o: ../server/event.h
 CMakeFiles/server.dir/server/server.cpp.o: ../server/parsing_functionalities.h
 CMakeFiles/server.dir/server/server.cpp.o: ../server/server.cpp

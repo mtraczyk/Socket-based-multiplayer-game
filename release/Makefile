@@ -136,33 +136,6 @@ server/fast:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
 .PHONY : server/fast
 
-client/err.o: client/err.c.o
-
-.PHONY : client/err.o
-
-# target to build an object file
-client/err.c.o:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client/err.c.o
-.PHONY : client/err.c.o
-
-client/err.i: client/err.c.i
-
-.PHONY : client/err.i
-
-# target to preprocess a source file
-client/err.c.i:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client/err.c.i
-.PHONY : client/err.c.i
-
-client/err.s: client/err.c.s
-
-.PHONY : client/err.s
-
-# target to generate assembly for a file
-client/err.c.s:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client/err.c.s
-.PHONY : client/err.c.s
-
 client/main.o: client/main.c.o
 
 .PHONY : client/main.o
@@ -217,32 +190,35 @@ crc32/crc32.c.s:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/crc32/crc32.c.s
 .PHONY : crc32/crc32.c.s
 
-server/err.o: server/err.c.o
+err/err.o: err/err.c.o
 
-.PHONY : server/err.o
+.PHONY : err/err.o
 
 # target to build an object file
-server/err.c.o:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/err.c.o
-.PHONY : server/err.c.o
+err/err.c.o:
+	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/err/err.c.o
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/err/err.c.o
+.PHONY : err/err.c.o
 
-server/err.i: server/err.c.i
+err/err.i: err/err.c.i
 
-.PHONY : server/err.i
+.PHONY : err/err.i
 
 # target to preprocess a source file
-server/err.c.i:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/err.c.i
-.PHONY : server/err.c.i
+err/err.c.i:
+	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/err/err.c.i
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/err/err.c.i
+.PHONY : err/err.c.i
 
-server/err.s: server/err.c.s
+err/err.s: err/err.c.s
 
-.PHONY : server/err.s
+.PHONY : err/err.s
 
 # target to generate assembly for a file
-server/err.c.s:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server/err.c.s
-.PHONY : server/err.c.s
+err/err.c.s:
+	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/err/err.c.s
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/err/err.c.s
+.PHONY : err/err.c.s
 
 server/event.o: server/event.cpp.o
 
@@ -362,18 +338,15 @@ help:
 	@echo "... edit_cache"
 	@echo "... client"
 	@echo "... server"
-	@echo "... client/err.o"
-	@echo "... client/err.i"
-	@echo "... client/err.s"
 	@echo "... client/main.o"
 	@echo "... client/main.i"
 	@echo "... client/main.s"
 	@echo "... crc32/crc32.o"
 	@echo "... crc32/crc32.i"
 	@echo "... crc32/crc32.s"
-	@echo "... server/err.o"
-	@echo "... server/err.i"
-	@echo "... server/err.s"
+	@echo "... err/err.o"
+	@echo "... err/err.i"
+	@echo "... err/err.s"
 	@echo "... server/event.o"
 	@echo "... server/event.i"
 	@echo "... server/event.s"

@@ -70,29 +70,29 @@ CMakeFiles/client.dir/client/main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/client.dir/client/main.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/zadanie2SIK/client/main.c -o CMakeFiles/client.dir/client/main.c.s
 
-CMakeFiles/client.dir/client/err.c.o: CMakeFiles/client.dir/flags.make
-CMakeFiles/client.dir/client/err.c.o: ../client/err.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/client.dir/client/err.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/client.dir/client/err.c.o   -c /home/michal/CLionProjects/zadanie2SIK/client/err.c
+CMakeFiles/client.dir/err/err.c.o: CMakeFiles/client.dir/flags.make
+CMakeFiles/client.dir/err/err.c.o: ../err/err.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/client.dir/err/err.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/client.dir/err/err.c.o   -c /home/michal/CLionProjects/zadanie2SIK/err/err.c
 
-CMakeFiles/client.dir/client/err.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/client.dir/client/err.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/zadanie2SIK/client/err.c > CMakeFiles/client.dir/client/err.c.i
+CMakeFiles/client.dir/err/err.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/client.dir/err/err.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/zadanie2SIK/err/err.c > CMakeFiles/client.dir/err/err.c.i
 
-CMakeFiles/client.dir/client/err.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/client.dir/client/err.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/zadanie2SIK/client/err.c -o CMakeFiles/client.dir/client/err.c.s
+CMakeFiles/client.dir/err/err.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/client.dir/err/err.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/zadanie2SIK/err/err.c -o CMakeFiles/client.dir/err/err.c.s
 
 # Object files for target client
 client_OBJECTS = \
 "CMakeFiles/client.dir/client/main.c.o" \
-"CMakeFiles/client.dir/client/err.c.o"
+"CMakeFiles/client.dir/err/err.c.o"
 
 # External object files for target client
 client_EXTERNAL_OBJECTS =
 
 client: CMakeFiles/client.dir/client/main.c.o
-client: CMakeFiles/client.dir/client/err.c.o
+client: CMakeFiles/client.dir/err/err.c.o
 client: CMakeFiles/client.dir/build.make
 client: CMakeFiles/client.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking C executable client"

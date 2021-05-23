@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/server.dir/crc32/crc32.c.o"
-  "CMakeFiles/server.dir/server/err.c.o"
+  "CMakeFiles/server.dir/err/err.c.o"
   "CMakeFiles/server.dir/server/event.cpp.o"
   "CMakeFiles/server.dir/server/main.cpp.o"
   "CMakeFiles/server.dir/server/parsing_functionalities.cpp.o"

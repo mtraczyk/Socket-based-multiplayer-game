@@ -6,9 +6,19 @@
 
 #IncludeRegexTransform: 
 
-/home/michal/CLionProjects/zadanie2SIK/crc32/crc32.c
-sys/param.h
+/home/michal/CLionProjects/zadanie2SIK/err/err.c
+errno.h
 -
-stdint.h
+stdio.h
 -
+stdlib.h
+-
+stdarg.h
+-
+string.h
+-
+err.h
+/home/michal/CLionProjects/zadanie2SIK/err/err.h
+
+/home/michal/CLionProjects/zadanie2SIK/err/err.h
 

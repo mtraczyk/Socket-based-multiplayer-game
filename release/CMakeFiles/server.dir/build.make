@@ -96,18 +96,18 @@ CMakeFiles/server.dir/server/parsing_functionalities.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/server.dir/server/parsing_functionalities.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/michal/CLionProjects/zadanie2SIK/server/parsing_functionalities.cpp -o CMakeFiles/server.dir/server/parsing_functionalities.cpp.s
 
-CMakeFiles/server.dir/server/err.c.o: CMakeFiles/server.dir/flags.make
-CMakeFiles/server.dir/server/err.c.o: ../server/err.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/server.dir/server/err.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/server.dir/server/err.c.o   -c /home/michal/CLionProjects/zadanie2SIK/server/err.c
+CMakeFiles/server.dir/err/err.c.o: CMakeFiles/server.dir/flags.make
+CMakeFiles/server.dir/err/err.c.o: ../err/err.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/server.dir/err/err.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/server.dir/err/err.c.o   -c /home/michal/CLionProjects/zadanie2SIK/err/err.c
 
-CMakeFiles/server.dir/server/err.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/server.dir/server/err.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/zadanie2SIK/server/err.c > CMakeFiles/server.dir/server/err.c.i
+CMakeFiles/server.dir/err/err.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/server.dir/err/err.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/michal/CLionProjects/zadanie2SIK/err/err.c > CMakeFiles/server.dir/err/err.c.i
 
-CMakeFiles/server.dir/server/err.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/server.dir/server/err.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/zadanie2SIK/server/err.c -o CMakeFiles/server.dir/server/err.c.s
+CMakeFiles/server.dir/err/err.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/server.dir/err/err.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/michal/CLionProjects/zadanie2SIK/err/err.c -o CMakeFiles/server.dir/err/err.c.s
 
 CMakeFiles/server.dir/server/event.cpp.o: CMakeFiles/server.dir/flags.make
 CMakeFiles/server.dir/server/event.cpp.o: ../server/event.cpp
@@ -140,7 +140,7 @@ server_OBJECTS = \
 "CMakeFiles/server.dir/server/main.cpp.o" \
 "CMakeFiles/server.dir/server/server.cpp.o" \
 "CMakeFiles/server.dir/server/parsing_functionalities.cpp.o" \
-"CMakeFiles/server.dir/server/err.c.o" \
+"CMakeFiles/server.dir/err/err.c.o" \
 "CMakeFiles/server.dir/server/event.cpp.o" \
 "CMakeFiles/server.dir/crc32/crc32.c.o"
 
@@ -150,7 +150,7 @@ server_EXTERNAL_OBJECTS =
 server: CMakeFiles/server.dir/server/main.cpp.o
 server: CMakeFiles/server.dir/server/server.cpp.o
 server: CMakeFiles/server.dir/server/parsing_functionalities.cpp.o
-server: CMakeFiles/server.dir/server/err.c.o
+server: CMakeFiles/server.dir/err/err.c.o
 server: CMakeFiles/server.dir/server/event.cpp.o
 server: CMakeFiles/server.dir/crc32/crc32.c.o
 server: CMakeFiles/server.dir/build.make
