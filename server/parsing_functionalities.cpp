@@ -68,8 +68,8 @@ namespace {
   }
 }
 
-int setProgramParameters(int argc, char *const argv[], uint32_t *portNum, int64_t *seed, int64_t *turningSpeed,
-                         uint32_t *roundsPerSecond, uint32_t *boardWidth, uint32_t *boardHeight) {
+int setProgramParameters(int argc, char *const argv[], uint16_t *portNum, int64_t *seed, uint8_t *turningSpeed,
+                         uint8_t *roundsPerSecond, uint16_t *boardWidth, uint16_t *boardHeight) {
   std::string optstring = "p:s:t:v:w:h:";
   int option;
   int64_t auxValue;
