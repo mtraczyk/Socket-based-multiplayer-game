@@ -22,9 +22,13 @@ set(SERVER_SOURCE_FILES
         )
 
 set(CLIENT_SOURCE_FILES
-        client/main.c
         err/err.h
         err/err.c
+        client/main.cpp
+        client/parsing_functionalities.h
+        client/parsing_functionalities.cpp
+        client/client.h
+        client/client.cpp
         )
 
 # Wskazujemy plik wykonywalny.
