@@ -36,6 +36,8 @@ set(CLIENT_SOURCE_FILES
         client/main.cpp
         client/parsing_functionalities.h
         client/parsing_functionalities.cpp
+        client/client.h
+        client/client.cpp
         )
 
 set(SERVER_TEST_SOURCE_FILES

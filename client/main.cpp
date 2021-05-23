@@ -3,6 +3,7 @@
 
 #include "../err/err.h"
 #include "parsing_functionalities.h"
+#include "client.h"
 
 #define DEFAULT_GAME_SERVER_PORT 20210
 #define DEFAULT_GUI_SERVER "localhost"
@@ -26,6 +27,8 @@ int main(int argc, char **argv) {
     fatal("Incorrect program parameters!\nUsage: "
           "./screen-worms-client game_server [-n player_name] [-p n] [-i gui_server] [-r n]");
   }
+
+  client(gameServer, myPortNum, playerName, gameServerPort, guiServer, guiServerPort);
 
   return 0;
 }
