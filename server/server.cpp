@@ -45,12 +45,16 @@
 
 #define RAND_MULTIPLIER 279410273
 #define RAND_MODULO 4294967291
+#define PI 3.14159265
+#define FULL_CIRCLE 360
+#define HALF_CIRCLE 180
 
 #define NEW_GAME 0
 #define PIXEL 1
 #define PLAYER_ELIMINATED 2
 #define GAME_OVER 3
-#define FULL_CIRCLE 360
+#define LEFT_ARR 1
+#define RIGHT_ARR 2
 
 char buffer[BUFFER_SIZE];
 
@@ -74,6 +78,7 @@ u_short activePlayersNum = 0;
 // game info
 bool gamePlayed = false; // indicates whether a game is being played
 uint32_t gameId; // every game has a randomly generated id
+u_short playersInTheGame = 0; // number of people in a particular game
 
 // socket connection data
 struct sockaddr_in auxClientAddress;
@@ -84,6 +89,10 @@ int flags, sndFlags, len;
 int64_t randomNumber;
 
 namespace {
+  void addPlayerEliminatedEvent(uint8_t playerNum);
+  void addPixelEvent(uint8_t playerNum, uint32_t x, uint32_t y);
+  void sendEvent(int sock);
+
   // global structure used to store info about used names
   inline std::set<std::string> &namesUsed() {
     static auto *s = new std::set<std::string>();
@@ -116,8 +125,45 @@ namespace {
     }
   }
 
-  void performNextTurn() {
+  inline double angleToRadian(double x) {
+    return x * PI / HALF_CIRCLE;
+  }
 
+  inline bool checkBorders(int64_t x, int64_t y, int64_t boardWidth, int64_t boardHeight) {
+    return x >= 0 && y >= 0 && x <= boardWidth && y <= boardHeight;
+  }
+
+  void performNextTurn(int64_t turningSpeed, uint32_t boardWidth, uint32_t boardHeight, int sock) {
+    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
+      if (takesPartInTheCurrentGame[i]) {
+        if (turnDirection[i] == LEFT_ARR) {
+          playerDirection[i] += turningSpeed;
+        } else if (turnDirection[i] == RIGHT_ARR) {
+          playerDirection[i] -= turningSpeed;
+        }
+
+        playerWormX[i] += cos(angleToRadian(playerDirection[i]));
+        playerWormY[i] += sin(angleToRadian(playerDirection[i]));
+        int64_t auxX = std::round(playerWormX[i]);
+        int64_t auxY = std::round(playerWormY[i]);
+
+        if (checkBorders(auxX, auxY, boardWidth, boardHeight)) {
+          roundedPlayerWormX[i] = auxX;
+          roundedPlayerWormY[i] = auxY;
+          if (!(roundedPlayerWormX[i] == auxX && roundedPlayerWormY[i] == auxY)) {
+            if (squaresUsed().find({auxX, auxY}) != squaresUsed().end()) {
+              // player eliminated
+              addPlayerEliminatedEvent(i);
+              sendEvent(sock);
+            } else {
+              // eat pixel
+              addPixelEvent(i, roundedPlayerWormX[i], roundedPlayerWormY[i]);
+              sendEvent(sock);
+            }
+          }
+        }
+      }
+    }
   }
 
   inline void getCurrentTime() {
@@ -126,7 +172,9 @@ namespace {
     }
   }
 
-  void checkNextTurn(time_t nanoSecPeriod) {
+#warning TURNING SPEED
+
+  void checkNextTurn(time_t nanoSecPeriod, int64_t turningSpeed, uint32_t boardWidth, uint32_t boardHeight, int sock) {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         getCurrentTime();
@@ -139,7 +187,7 @@ namespace {
           syserr("timerfd_settime");
         }
 
-        performNextTurn();
+        performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
       }
@@ -384,10 +432,16 @@ namespace {
   inline void addPlayerEliminatedEvent(uint8_t playerNum) {
     Event *aux = new PlayerEliminated(events().size(), PLAYER_ELIMINATED, playerNum);
     events().push_back(aux);
+    playersInTheGame--;
   }
 
   inline void addPixelEvent(uint8_t playerNum, uint32_t x, uint32_t y) {
     Event *aux = new Pixel(events().size(), PIXEL, playerNum, x, y);
+    events().push_back(aux);
+  }
+
+  inline void addGameOverEvent() {
+    Event *aux = new GameOver(events().size(), GAME_OVER);
     events().push_back(aux);
   }
 
@@ -410,6 +464,7 @@ namespace {
       events().clear(); // new game, delete events from a previous game
       squaresUsed().clear(); // new game, clear the board
       gameId = deterministicRand();
+      playersInTheGame = 0;
       std::vector<std::string> players(namesUsed().begin(), namesUsed().end());
 
       Event *aux = new NewGame(0, NEW_GAME, boardWidth, boardHeight, players);
@@ -420,6 +475,7 @@ namespace {
         takesPartInTheCurrentGame[i] = lastActivity[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
 
         if (takesPartInTheCurrentGame[i]) {
+          playersInTheGame++; // one more player
           playerWormX[i] = (deterministicRand() % boardWidth) + 0.5;
           playerWormY[i] = (deterministicRand() % boardHeight) + 0.5;
           roundedPlayerWormX[i] = std::round(playerWormX[i]);
@@ -434,6 +490,12 @@ namespace {
           }
           sendEvent(sock);
         }
+      }
+
+      if (playersInTheGame == 1) {
+        // game finished
+        addGameOverEvent();
+        sendEvent(sock);
       }
     }
   }
@@ -472,7 +534,7 @@ void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
     /* Checks whether timer for the next round had expired.
      * If that's the case needed operations are performed.
      */
-    checkNextTurn(NANO_SEC / roundsPerSecond);
+    checkNextTurn(NANO_SEC / roundsPerSecond, turningSpeed, boardWidth, boardHeight, sock);
     checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
     newGame(boardWidth, boardHeight, sock); // check the possibility of starting a new game
