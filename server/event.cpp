@@ -1,11 +1,8 @@
 #include "event.h"
 #include "parsing_functionalities.h"
+#include "../crc32/crc32.h"
 
 namespace {
-  uint32_t crc32(std::string const &input) {
-    return 0;
-  }
-
   void generateEventInfo(std::string &datagram, uint32_t eventNo, uint8_t eventType) {
     auto byteArray = toByte(eventNo);
     datagram = std::string(byteArray.begin(), byteArray.end());
@@ -23,7 +20,7 @@ namespace {
     std::string eventPartLength;
     uint32_t len = eventDatagramPart.size();
 
-    addNumber(eventDatagramPart, crc32(eventDatagramPart));
+    addNumber(eventDatagramPart, crc32(eventDatagramPart.c_str(), sizeof(eventDatagramPart.c_str())));
     addNumber(eventPartLength, len);
 
     return eventPartLength + eventDatagramPart;
