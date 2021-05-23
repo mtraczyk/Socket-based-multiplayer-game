@@ -22,8 +22,8 @@ set(SERVER_SOURCE_FILES
         server/server.cpp
         server/parsing_functionalities.h
         server/parsing_functionalities.cpp
-        server/err.h
-        server/err.c
+        err/err.h
+        err/err.c
         server/event.cpp
         server/event.h
         crc32/crc32.h
@@ -32,16 +32,16 @@ set(SERVER_SOURCE_FILES
 
 set(CLIENT_SOURCE_FILES
         client/main.c
-        client/err.h
-        client/err.c
+        err/err.h
+        err/err.c
         )
 
 set(SERVER_TEST_SOURCE_FILES
         additional_src/server_test.cpp
         server/parsing_functionalities.h
         server/parsing_functionalities.cpp
-        server/err.h
-        server/err.c
+        err/err.h
+        err/err.c
         server/server.h
         server/server.cpp
         server/event.cpp

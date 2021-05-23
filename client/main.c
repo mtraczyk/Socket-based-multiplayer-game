@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "err.h"
+#include "../err/err.h"
 
 #define BUFFER_SIZE 1000
 #define DECIMAL_BASIS 10
