@@ -130,7 +130,7 @@ namespace {
   }
 
   inline bool checkBorders(int64_t x, int64_t y, int64_t boardWidth, int64_t boardHeight) {
-    return x >= 0 && y >= 0 && x <= boardWidth && y <= boardHeight;
+    return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
   }
 
   void performNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {

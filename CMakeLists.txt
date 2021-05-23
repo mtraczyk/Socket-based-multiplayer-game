@@ -17,6 +17,8 @@ set(SERVER_SOURCE_FILES
         server/err.c
         server/event.cpp
         server/event.h
+        crc32/crc32.h
+        crc32/crc32.c
         )
 
 set(CLIENT_SOURCE_FILES

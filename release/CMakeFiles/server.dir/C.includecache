@@ -6,3 +6,9 @@
 
 #IncludeRegexTransform: 
 
+/home/michal/CLionProjects/zadanie2SIK/crc32/crc32.c
+sys/param.h
+-
+stdint.h
+-
+

@@ -190,6 +190,33 @@ client/main.c.s:
 	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client/main.c.s
 .PHONY : client/main.c.s
 
+crc32/crc32.o: crc32/crc32.c.o
+
+.PHONY : crc32/crc32.o
+
+# target to build an object file
+crc32/crc32.c.o:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/crc32/crc32.c.o
+.PHONY : crc32/crc32.c.o
+
+crc32/crc32.i: crc32/crc32.c.i
+
+.PHONY : crc32/crc32.i
+
+# target to preprocess a source file
+crc32/crc32.c.i:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/crc32/crc32.c.i
+.PHONY : crc32/crc32.c.i
+
+crc32/crc32.s: crc32/crc32.c.s
+
+.PHONY : crc32/crc32.s
+
+# target to generate assembly for a file
+crc32/crc32.c.s:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/crc32/crc32.c.s
+.PHONY : crc32/crc32.c.s
+
 server/err.o: server/err.c.o
 
 .PHONY : server/err.o
@@ -341,6 +368,9 @@ help:
 	@echo "... client/main.o"
 	@echo "... client/main.i"
 	@echo "... client/main.s"
+	@echo "... crc32/crc32.o"
+	@echo "... crc32/crc32.i"
+	@echo "... crc32/crc32.s"
 	@echo "... server/err.o"
 	@echo "... server/err.i"
 	@echo "... server/err.s"

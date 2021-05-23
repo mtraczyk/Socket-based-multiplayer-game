@@ -1,1 +1,1 @@
-/usr/bin/c++  -g -Wall -Wextra   CMakeFiles/server.dir/server/main.cpp.o CMakeFiles/server.dir/server/server.cpp.o CMakeFiles/server.dir/server/parsing_functionalities.cpp.o CMakeFiles/server.dir/server/err.c.o CMakeFiles/server.dir/server/event.cpp.o  -o server 
+/usr/bin/c++  -g -Wall -Wextra   CMakeFiles/server.dir/server/main.cpp.o CMakeFiles/server.dir/server/server.cpp.o CMakeFiles/server.dir/server/parsing_functionalities.cpp.o CMakeFiles/server.dir/server/err.c.o CMakeFiles/server.dir/server/event.cpp.o CMakeFiles/server.dir/crc32/crc32.c.o  -o server 
