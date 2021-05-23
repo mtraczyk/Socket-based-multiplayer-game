@@ -433,7 +433,7 @@ namespace {
     playersInTheGame--;
   }
 
-  inline void addPixelEvent(uint8_t playerNum, uint32_t x, uint32_t y) {
+  inline void addPixelEvent(uint8_t playerNum, uint16_t x, uint16_t y) {
     Event *aux = new Pixel(events().size(), PIXEL, playerNum, x, y);
     events().push_back(aux);
   }
