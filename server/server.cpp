@@ -501,8 +501,8 @@ namespace {
   }
 }
 
-void server(uint32_t portNum, int64_t seed, int64_t turningSpeed,
-            uint32_t roundsPerSecond, uint32_t boardWidth, uint32_t boardHeight) {
+void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
+            uint8_t roundsPerSecond, uint16_t boardWidth, uint16_t boardHeight) {
   int sock; // socket descriptor
   int ready; // variable to store poll return value
   struct sockaddr_in6 serverAddress;
