@@ -31,9 +31,11 @@ set(SERVER_SOURCE_FILES
         )
 
 set(CLIENT_SOURCE_FILES
-        client/main.c
         err/err.h
         err/err.c
+        client/main.cpp
+        client/parsing_functionalities.h
+        client/parsing_functionalities.cpp
         )
 
 set(SERVER_TEST_SOURCE_FILES

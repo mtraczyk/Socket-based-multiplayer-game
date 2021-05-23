@@ -14,16 +14,18 @@
 #define ROUNDS_PER_SEC 'v'
 #define WIDTH 'w'
 #define HEIGHT 'h'
-#define MIN_PORT 0
+#define MIN_PORT 1
 #define MAX_PORT 65535
+#define MIN_SEED 0
+#define MAX_SEED std::numeric_limits<uint32_t>::max()
 #define MIN_TURNING 1
-#define MAX_TURNING 45
+#define MAX_TURNING 90
 #define MIN_VEL 1
 #define MAX_VEL 250
-#define MIN_WIDTH 128
-#define MAX_WIDTH 1920
-#define MIN_HEIGHT 128
-#define MAX_HEIGHT 1920
+#define MIN_WIDTH 16
+#define MAX_WIDTH 4096
+#define MIN_HEIGHT 16
+#define MAX_HEIGHT 4096
 
 namespace {
   /* atoi like function, with constraints on minimum and maximum value.
@@ -85,8 +87,7 @@ int setProgramParameters(int argc, char *const argv[], uint16_t *portNum, int64_
         *portNum = auxValue;
         break;
       case SEED:
-        if (numFromArg(&auxValue, optarg, std::numeric_limits<int32_t>::min(),
-                       std::numeric_limits<uint32_t>::max()) < 0) {
+        if (numFromArg(&auxValue, optarg, MIN_SEED, MAX_SEED) < 0) {
           return ERROR;
         }
         *seed = auxValue;
