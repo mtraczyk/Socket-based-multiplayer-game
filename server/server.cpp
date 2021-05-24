@@ -137,9 +137,9 @@ namespace {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (takesPartInTheCurrentGame[i]) {
         if (turnDirection[i] == LEFT_ARR) {
-          playerDirection[i] += (double)turningSpeed;
+          playerDirection[i] += (double) turningSpeed;
         } else if (turnDirection[i] == RIGHT_ARR) {
-          playerDirection[i] -= (double)turningSpeed;
+          playerDirection[i] -= (double) turningSpeed;
         }
 
         playerWormX[i] += cos(angleToRadian(playerDirection[i]));
@@ -178,7 +178,7 @@ namespace {
         getCurrentTime();
         //set timer again
         newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
-        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_sec + nanoSecPeriod; // first expiration time
+        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec + nanoSecPeriod; // first expiration time
         newValue[DATA_ARR_SIZE].it_interval.tv_sec = 0;
         newValue[DATA_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
         if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE], NULL) == -1) {
