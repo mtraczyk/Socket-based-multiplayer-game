@@ -12,12 +12,20 @@
 
 #define DATA_ARR_SIZE 3
 #define FREQUENCY 30000000 // how frequent are messages to the game server in nanoseconds
+#define BUFFER_SIZE 4096
+#define KEY_UP 0
+#define KEY_DOWN 1
 
 struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 struct itimerspec newValue;
 struct timespec now; // auxiliary struct to store current time
 struct sockaddr_in gameServerAddress;
+char buffer[BUFFER_SIZE];
+uint8_t leftKey = KEY_UP;
+uint8_t rightKey = KEY_UP;
+std::string guiMessages; // used to store fragments that are yet to be parsed
+std::string possibleGuiMessages[4] = {"LEFT_KEY_DOWN", "LEFT_KEY_UP", "RIGHT_KEY_DOWN", "RIGHT_KEY_UP"};
 
 namespace {
   int getGuiSocket(std::string const &guiServer, uint16_t guiServerPort) {
@@ -111,11 +119,60 @@ namespace {
     freeaddrinfo(addrResult);
   }
 
-  void checkMessageFromGameServer() {
-
+  inline void cleanBuffer() {
+    for (char &i : buffer) {
+      if (i != 0) {
+        i = 0;
+      } else {
+        break;
+      }
+    }
   }
 
-  void checkMessageFromGui() {
+  inline void parseGuiMessage(std::string const &message) {
+    std::string aux = guiMessages;
+    guiMessages.clear();
+
+    for (auto const &u : message) {
+      if (u == '\n') {
+        if (aux == possibleGuiMessages[0]) {
+          leftKey = KEY_DOWN;
+        } else if (aux == possibleGuiMessages[1]) {
+          leftKey = KEY_UP;
+        } else if (aux == possibleGuiMessages[2]) {
+          rightKey = KEY_DOWN;
+        } else if (aux == possibleGuiMessages[3]) {
+          rightKey = KEY_UP;
+        }
+        // otherwise ignore the message
+
+        aux.clear();
+      } else {
+        aux += u;
+      }
+    }
+
+    guiMessages = aux; // if there is something left, it needs to be saved
+  }
+
+  void checkMessageFromGui(int guiSocket) {
+    if (pfds[0].revents != 0) {
+      if (pfds[0].revents & POLLIN) {
+        // there is a message from gui
+        cleanBuffer();
+        int len = read(guiSocket, buffer, sizeof(buffer) - 1);
+        if (len < 0) {
+          syserr("read");
+        }
+
+        parseGuiMessage(std::string(buffer));
+      } else { /* POLLERR | POLLHUP */
+        syserr("turn timer error");
+      }
+    }
+  }
+
+  void checkMessageFromGameServer() {
 
   }
 
@@ -143,8 +200,8 @@ void client(std::string const &gameServer, std::string const &playerName,
       syserr("poll error");
     }
 
+    checkMessageFromGui(guiSocket);
     checkMessageFromGameServer();
-    checkMessageFromGui();
     checkSendMessageToGameServer();
   }
 
