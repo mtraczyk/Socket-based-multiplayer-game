@@ -1,6 +1,11 @@
 #ifndef SHARED_PARSING_FUNCTIONALITIES_H
 #define SHARED_PARSING_FUNCTIONALITIES_H
 
+#include <vector>
+#include <string>
+
+using byte = uint8_t;
+
 int numFromArg(int64_t *value, const char *arg, int64_t minValue, int64_t maxValue);
 
 template<typename T>
