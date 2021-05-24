@@ -10,7 +10,7 @@
 #define DEFAULT_GUI_SERVER_PORT 20210
 
 int main(int argc, char **argv) {
-  if (argc == 0) {
+  if (argc == 1) {
     fatal("Usage: %s game_server ...\n", argv[0]);
   }
 
