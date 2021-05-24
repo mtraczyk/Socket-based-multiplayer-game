@@ -2,9 +2,21 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <cstring>
+#include <poll.h>
+#include <sys/timerfd.h>
+#include <iostream>
 
 #include "client.h"
 #include "../err/err.h"
+
+#define DATA_ARR_SIZE 3
+#define FREQUENCY 30000000 // how frequent are messages to the game server in nanoseconds
+
+struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
+nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
+struct itimerspec newValue;
+struct timespec now; // auxiliary struct to store current time
 
 namespace {
   int getGuiSocket(std::string const &guiServer, uint16_t guiServerPort) {
@@ -38,19 +50,52 @@ namespace {
 
     return sock;
   }
+
+  inline void getCurrentTime() {
+    if (clock_gettime(CLOCK_REALTIME, &now) == -1) {
+      syserr("clock_gettime");
+    }
+  }
+
+  inline void setTimerForServerResponse() {
+    // set timer
+    getCurrentTime();
+    newValue.it_value.tv_sec = now.tv_sec;
+    newValue.it_value.tv_nsec = now.tv_sec + FREQUENCY; // first expiration time
+    newValue.it_interval.tv_sec = 0;
+    newValue.it_interval.tv_nsec = FREQUENCY; // period
+    if (timerfd_settime(pfds[2].fd, TFD_TIMER_ABSTIME, &newValue, NULL) == -1) {
+      syserr("timerfd_settime");
+    }
+  }
+
+  inline void setPollfdArray(int guiSocket, int udpSocket) {
+    pfds[0].fd = guiSocket;
+    pfds[1].fd = udpSocket;
+    pfds[2].fd = = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
+    if (pfds[2].fd == -1) {
+      syserr("timerfd_create");
+    }
+
+    setTimerForServerResponse(); // set timer
+
+    for (auto &pfd : pfds) {
+      pfd.events = POLLIN;
+    }
+  }
 }
 
-void client(std::string const &gameServer, uint16_t myPortNum, std::string const &playerName,
+void client(std::string const &gameServer, std::string const &playerName,
             uint16_t gameServerPort, std::string const &guiServer, uint16_t guiServerPort) {
   int guiSocket = getGuiSocket(guiServer, guiServerPort); // obtains socket for client - gui connection
-  int udpSocket;
+  int udpSocket, ready;
   struct addrinfo addrHints;
   struct addrinfo *addrResult;
   struct sockaddr_in myAddress;
 
   // 'converting' host/port in string to struct addrinfo
   (void) memset(&addrHints, 0, sizeof(struct addrinfo));
-  addrHints.ai_family = AF_INET; // IPv4
+  addrHints.ai_family = AF_INET6; // IPv6
   addrHints.ai_socktype = SOCK_DGRAM;
   addrHints.ai_protocol = IPPROTO_UDP;
   addrHints.ai_flags = 0;
@@ -72,6 +117,17 @@ void client(std::string const &gameServer, uint16_t myPortNum, std::string const
   udpSocket = socket(PF_INET, SOCK_DGRAM, 0);
   if (udpSocket < 0) {
     syserr("socket");
+  }
+
+  setPollfdArray(guiSocket, udpSocket); // sets the array that will be used for polling
+
+  for (;;) {
+    ready = poll(pfds, nfds, -1); // wait as long as needed
+    if (ready == -1) {
+      syserr("poll error");
+    }
+
+    std::cout << ":)" << std::endl;
   }
 
   (void) close(guiSocket);
