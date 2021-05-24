@@ -17,6 +17,7 @@
 #include "../shared_functionalities/err.h"
 #include "../shared_functionalities/event.h"
 #include "parsing_functionalities.h"
+#include "../shared_functionalities/parsing_functionalities.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known
 #define MIN_NUM_OF_PLAYERS_TO_START_A_GAME 2 // minimum number of players to start a game
