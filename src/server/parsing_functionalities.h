@@ -9,10 +9,4 @@ using byte = uint8_t;
 int setProgramParameters(int argc, char *const argv[], uint16_t *, int64_t *,
                          uint8_t *, uint8_t *, uint16_t *, uint16_t *);
 
-template<typename T>
-std::vector<byte> toByte(T input) {
-  byte *bytePointer = reinterpret_cast<byte *>(&input);
-  return std::vector<byte>(bytePointer, bytePointer + sizeof(T));
-}
-
 #endif /* PARSING_FUNCTIONALITIES_H */
