@@ -71,6 +71,7 @@ class GameOver : public Event {
 
     virtual ~GameOver() = default;
     std::string getByteRepresentationServer() const noexcept override;
+    std::string getByteRepresentationClient() const noexcept override;
 };
 
 
