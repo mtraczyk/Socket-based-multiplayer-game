@@ -1,1 +1,0 @@
-/usr/bin/c++  -g -Wall -Wextra   CMakeFiles/server_test.dir/additional_src/server_test.cpp.o CMakeFiles/server_test.dir/server/parsing_functionalities.cpp.o CMakeFiles/server_test.dir/server/err.c.o CMakeFiles/server_test.dir/server/server.cpp.o  -o server_test  -lgtest -lgtest_main -lgmock -lgmock_main 

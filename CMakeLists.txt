@@ -8,32 +8,33 @@ set(DEFAULT_BUILD_TYPE "RELEASE")
 
 # Wskazujemy pliki źródłowe.
 set(SERVER_SOURCE_FILES
-        server/main.cpp
-        server/server.h
-        server/server.cpp
-        server/parsing_functionalities.h
-        server/parsing_functionalities.cpp
-        err/err.h
-        err/err.c
-        server/event.cpp
-        server/event.h
-        crc32/crc32.h
-        crc32/crc32.c
-        parsing_functionalities/parsing_functionalities.h
-        parsing_functionalities/parsing_functionalities.cpp
+        src/server/main.cpp
+        src/server/server.h
+        src/server/server.cpp
+        src/server/parsing_functionalities.h
+        src/server/parsing_functionalities.cpp
+        src/shared_functionalities/err.h
+        src/shared_functionalities/err.c
+        src/shared_functionalities/event.cpp
+        src/shared_functionalities/event.h
+        src/shared_functionalities/crc32.h
+        src/shared_functionalities/crc32.c
+        src/shared_functionalities/parsing_functionalities.h
+        src/shared_functionalities/parsing_functionalities.cpp
         )
 
 set(CLIENT_SOURCE_FILES
-        err/err.h
-        err/err.c
-        client/main.cpp
-        client/parsing_functionalities.h
-        client/parsing_functionalities.cpp
-        client/client.h
-        client/client.cpp
-        parsing_functionalities/parsing_functionalities.h
-        parsing_functionalities/parsing_functionalities.cpp
+        src/shared_functionalities/err.h
+        src/shared_functionalities/err.c
+        src/client/main.cpp
+        src/client/parsing_functionalities.h
+        src/client/parsing_functionalities.cpp
+        src/client/client.h
+        src/client/client.cpp
+        src/shared_functionalities/parsing_functionalities.h
+        src/shared_functionalities/parsing_functionalities.cpp
         )
+
 
 # Wskazujemy plik wykonywalny.
 add_executable(server ${SERVER_SOURCE_FILES})

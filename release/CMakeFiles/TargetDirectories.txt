@@ -1,4 +1,0 @@
-/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/rebuild_cache.dir
-/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/edit_cache.dir
-/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/client.dir
-/home/michal/CLionProjects/zadanie2SIK/release/CMakeFiles/server.dir
