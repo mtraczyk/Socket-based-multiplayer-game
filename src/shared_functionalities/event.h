@@ -12,7 +12,8 @@ class Event {
     Event(uint32_t mEventNo, uint8_t mEventType) : eventNo(mEventNo), eventType(mEventType) {}
 
     virtual ~Event() = default;
-    virtual std::string getByteRepresentation() const noexcept = 0;
+    virtual std::string getByteRepresentationServer() const noexcept = 0;
+    virtual std::string getByteRepresentationClient() const noexcept = 0;
   protected:
     uint32_t eventNo;
     uint8_t eventType;
@@ -27,7 +28,8 @@ class NewGame : public Event {
                                                                 playersNames(std::move(mPlayersNames)) {}
 
     virtual ~NewGame() = default;
-    std::string getByteRepresentation() const noexcept override;
+    std::string getByteRepresentationServer() const noexcept override;
+    std::string getByteRepresentationClient() const noexcept override;
   private:
     uint32_t maxx;
     uint32_t maxy;
@@ -40,7 +42,8 @@ class Pixel : public Event {
       Event(mEventNo, mEventType), playerNum(mPlayerNum), x(mX), y(mY) {}
 
     virtual ~Pixel() = default;
-    std::string getByteRepresentation() const noexcept override;
+    std::string getByteRepresentationServer() const noexcept override;
+    std::string getByteRepresentationClient() const noexcept override;
   private:
     uint8_t playerNum;
     uint32_t x;
@@ -52,7 +55,8 @@ class PlayerEliminated : public Event {
     PlayerEliminated(uint32_t mEventNo, uint8_t mEventType, uint8_t mPlayerNum) : Event(mEventNo, mEventType),
                                                                                   playerNum(mPlayerNum) {};
     virtual ~PlayerEliminated() = default;
-    std::string getByteRepresentation() const noexcept override;
+    std::string getByteRepresentationServer() const noexcept override;
+    std::string getByteRepresentationClient() const noexcept override;
   private:
     uint8_t playerNum;
 };
@@ -62,7 +66,8 @@ class GameOver : public Event {
     GameOver(uint32_t mEventNo, uint8_t mEventType) : Event(mEventNo, mEventType) {}
 
     virtual ~GameOver() = default;
-    std::string getByteRepresentation() const noexcept override;
+    std::string getByteRepresentationServer() const noexcept override;
+    std::string getByteRepresentationClient() const noexcept override;
 };
 
 
