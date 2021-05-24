@@ -19,6 +19,8 @@ set(SERVER_SOURCE_FILES
         server/event.h
         crc32/crc32.h
         crc32/crc32.c
+        parsing_functionalities/parsing_functionalities.h
+        parsing_functionalities/parsing_functionalities.cpp
         )
 
 set(CLIENT_SOURCE_FILES
@@ -29,6 +31,8 @@ set(CLIENT_SOURCE_FILES
         client/parsing_functionalities.cpp
         client/client.h
         client/client.cpp
+        parsing_functionalities/parsing_functionalities.h
+        parsing_functionalities/parsing_functionalities.cpp
         )
 
 # Wskazujemy plik wykonywalny.
