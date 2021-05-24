@@ -3,8 +3,7 @@
 
 #include <string>
 
-int setProgramParameters(std::string &, uint16_t *, std::string &, uint16_t *);
-bool checkNameCorrectness(std::string const &);
+int setProgramParameters(int argc, char *const argv[], std::string &, uint16_t *, std::string &, uint16_t *);
 
 
 #endif /* PARSING_FUNCTIONALITIES_H */
