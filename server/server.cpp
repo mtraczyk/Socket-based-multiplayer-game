@@ -521,6 +521,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     syserr("bind, address taken.");
   }
 
+  signal(SIGPIPE, SIG_IGN); // Ignoring SIGPIPE.
   setPollfdArray(sock); // sets the array that will be used for polling
 
   for (;;) {

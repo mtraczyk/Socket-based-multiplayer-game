@@ -16,7 +16,6 @@ int main(int argc, char **argv) {
 
   // Program parameters.
   std::string gameServer = argv[1];
-  uint16_t myPortNum = 0; // bind to 0 will use first free port which client can use
   std::string playerName;
   uint16_t gameServerPort = DEFAULT_GAME_SERVER_PORT;
   std::string guiServer = DEFAULT_GUI_SERVER;
@@ -27,7 +26,7 @@ int main(int argc, char **argv) {
           "./screen-worms-client game_server [-n player_name] [-p n] [-i gui_server] [-r n]");
   }
 
-  client(gameServer, myPortNum, playerName, gameServerPort, guiServer, guiServerPort);
+  client(gameServer, playerName, gameServerPort, guiServer, guiServerPort);
 
   return 0;
 }

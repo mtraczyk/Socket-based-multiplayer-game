@@ -43,5 +43,37 @@ namespace {
 void client(std::string const &gameServer, uint16_t myPortNum, std::string const &playerName,
             uint16_t gameServerPort, std::string const &guiServer, uint16_t guiServerPort) {
   int guiSocket = getGuiSocket(guiServer, guiServerPort); // obtains socket for client - gui connection
+  int udpSocket;
+  struct addrinfo addrHints;
+  struct addrinfo *addrResult;
+  struct sockaddr_in myAddress;
+
+  // 'converting' host/port in string to struct addrinfo
+  (void) memset(&addrHints, 0, sizeof(struct addrinfo));
+  addrHints.ai_family = AF_INET; // IPv4
+  addrHints.ai_socktype = SOCK_DGRAM;
+  addrHints.ai_protocol = IPPROTO_UDP;
+  addrHints.ai_flags = 0;
+  addrHints.ai_addrlen = 0;
+  addrHints.ai_addr = NULL;
+  addrHints.ai_canonname = NULL;
+  addrHints.ai_next = NULL;
+  if (getaddrinfo(gameServer.c_str(), NULL, &addrHints, &addrResult) != 0) {
+    syserr("getaddrinfo");
+  }
+
+  myAddress.sin_family = AF_INET6; // IPv6
+  myAddress.sin_addr.s_addr =
+    ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
+  myAddress.sin_port = htons(gameServerPort); // port from the command line
+
+  freeaddrinfo(addrResult);
+
+  udpSocket = socket(PF_INET, SOCK_DGRAM, 0);
+  if (udpSocket < 0) {
+    syserr("socket");
+  }
+
   (void) close(guiSocket);
+  (void) close(udpSocket);
 }
