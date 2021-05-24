@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include "client.h"
-#include "../err/err.h"
+#include "../shared_functionalities/err.h"
 
 #define DATA_ARR_SIZE 3
 #define FREQUENCY 30000000 // how frequent are messages to the game server in nanoseconds
@@ -83,6 +83,18 @@ namespace {
       pfd.events = POLLIN;
     }
   }
+
+  void checkMessageFromGameServer() {
+
+  }
+
+  void checkMessageFromGui() {
+
+  }
+
+  void checkSendMessageToGameServer() {
+
+  }
 }
 
 void client(std::string const &gameServer, std::string const &playerName,
@@ -127,7 +139,9 @@ void client(std::string const &gameServer, std::string const &playerName,
       syserr("poll error");
     }
 
-    std::cout << ":)" << std::endl;
+    checkMessageFromGameServer();
+    checkMessageFromGui();
+    checkSendMessageToGameServer();
   }
 
   (void) close(guiSocket);

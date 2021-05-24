@@ -1,6 +1,6 @@
 #include "event.h"
-#include "parsing_functionalities.h"
-#include "../crc32/crc32.h"
+#include "../server/parsing_functionalities.h"
+#include "crc32.h"
 
 namespace {
   void generateEventInfo(std::string &datagram, uint32_t eventNo, uint8_t eventType) {

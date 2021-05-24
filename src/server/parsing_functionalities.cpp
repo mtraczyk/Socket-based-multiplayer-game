@@ -4,7 +4,7 @@
 #include <limits>
 #include <vector>
 #include "parsing_functionalities.h"
-#include "../parsing_functionalities/parsing_functionalities.h"
+#include "../shared_functionalities/parsing_functionalities.h"
 
 #define OK 0
 #define ERROR -1

@@ -3,8 +3,8 @@
 #include <iostream>
 
 #include "parsing_functionalities.h"
-#include "../parsing_functionalities/parsing_functionalities.h"
-#include "../err/err.h"
+#include "../shared_functionalities/parsing_functionalities.h"
+#include "../shared_functionalities/err.h"
 
 #define OK 0
 #define ERROR -1

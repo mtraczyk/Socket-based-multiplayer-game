@@ -14,8 +14,8 @@
 #include <csignal>
 
 #include "server.h"
-#include "../err/err.h"
-#include "event.h"
+#include "../shared_functionalities/err.h"
+#include "../shared_functionalities/event.h"
 #include "parsing_functionalities.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known

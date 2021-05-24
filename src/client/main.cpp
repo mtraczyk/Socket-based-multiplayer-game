@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <string>
 
-#include "../err/err.h"
+#include "../shared_functionalities/err.h"
 #include "parsing_functionalities.h"
 #include "client.h"
 

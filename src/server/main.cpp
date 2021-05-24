@@ -1,6 +1,6 @@
 #include <ctime>
 
-#include "../err/err.h"
+#include "../shared_functionalities/err.h"
 #include "parsing_functionalities.h"
 #include "server.h"
 
