@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/timerfd.h>
-#include <time.h>
 #include <poll.h>
 #include <utility>
 #include <string>
@@ -12,6 +11,7 @@
 #include <set>
 #include <vector>
 #include <cmath>
+#include <csignal>
 
 #include "server.h"
 #include "../err/err.h"

@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <cstring>
 
 #include "client.h"
 #include "../err/err.h"
@@ -40,7 +41,7 @@ namespace {
   }
 }
 
-void client(std::string const &gameServer, uint16_t myPortNum, std::string const &playerName,
+void client(std::string const &gameServer, std::string const &playerName,
             uint16_t gameServerPort, std::string const &guiServer, uint16_t guiServerPort) {
   int guiSocket = getGuiSocket(guiServer, guiServerPort); // obtains socket for client - gui connection
   int udpSocket;
