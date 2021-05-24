@@ -271,7 +271,7 @@ namespace {
       }
 
       *auxTurnDirection = (uint8_t) buffer[8]; // eighth byte of a datagram sets out turn direction
-      if (!(*auxTurnDirection >= 0 && *auxTurnDirection <= 1)) {
+      if (*auxTurnDirection > 1) {
         return false;
       }
 
@@ -412,7 +412,7 @@ namespace {
   inline int numberOfReadyPlayers() {
     int counter;
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (lastActivity[i] != 0 && !playerName[i].empty() && wantsToPlay[i] != 0) {
+      if (lastActivity[i] != 0 && !playerName[i].empty()) {
         counter++;
       }
     }
