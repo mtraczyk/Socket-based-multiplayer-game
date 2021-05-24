@@ -66,9 +66,6 @@ int setProgramParameters(int argc, char *const argv[], std::string &playerName, 
     }
   }
 
-  std::cout << "player name: " << playerName << " game server port: " << *gameServerPort << " gui server: " << guiServer
-            << " gui server port: " << *guiServerPort;
-
   return OK;
 }
 

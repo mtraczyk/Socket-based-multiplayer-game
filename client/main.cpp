@@ -5,7 +5,7 @@
 #include "parsing_functionalities.h"
 #include "client.h"
 
-#define DEFAULT_GAME_SERVER_PORT 20210
+#define DEFAULT_GAME_SERVER_PORT 2021
 #define DEFAULT_GUI_SERVER "localhost"
 #define DEFAULT_GUI_SERVER_PORT 20210
 
