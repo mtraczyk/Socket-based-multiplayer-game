@@ -22,8 +22,7 @@ int main(int argc, char **argv) {
   std::string guiServer = DEFAULT_GUI_SERVER;
   uint16_t guiServerPort = DEFAULT_GUI_SERVER_PORT;
 
-  if ((setProgramParameters(playerName, &gameServerPort, guiServer, &guiServerPort) < 0) ||
-      !checkNameCorrectness(playerName)) {
+  if (setProgramParameters(argc, argv, playerName, &gameServerPort, guiServer, &guiServerPort) < 0) {
     fatal("Incorrect program parameters!\nUsage: "
           "./screen-worms-client game_server [-n player_name] [-p n] [-i gui_server] [-r n]");
   }
