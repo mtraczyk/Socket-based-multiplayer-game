@@ -412,7 +412,7 @@ namespace {
   inline int numberOfReadyPlayers() {
     int counter;
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (lastActivity[i] != 0 && !playerName[i].empty() && turnDirection[i] != 0) {
+      if (lastActivity[i] != 0 && !playerName[i].empty() && wantsToPlay[i] != 0) {
         counter++;
       }
     }
