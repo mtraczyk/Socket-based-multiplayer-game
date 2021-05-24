@@ -25,7 +25,7 @@ class NewGame : public Event {
 
     NewGame(uint32_t mEventNo, uint8_t mEventType, uint32_t mMaxx, uint32_t mMaxy,
             playersNameCollection mPlayersNames) : Event(mEventNo, mEventType), maxx(mMaxx), maxy(mMaxy),
-                                                                playersNames(std::move(mPlayersNames)) {}
+                                                   playersNames(std::move(mPlayersNames)) {}
 
     virtual ~NewGame() = default;
     std::string getByteRepresentationServer() const noexcept override;
@@ -38,27 +38,31 @@ class NewGame : public Event {
 
 class Pixel : public Event {
   public:
-    Pixel(uint32_t mEventNo, uint8_t mEventType, uint8_t mPlayerNum, uint32_t mX, uint32_t mY) :
-      Event(mEventNo, mEventType), playerNum(mPlayerNum), x(mX), y(mY) {}
+    Pixel(uint32_t mEventNo, uint8_t mEventType, uint8_t mPlayerNum, std::string mPlayerName,
+          uint32_t mX, uint32_t mY) : Event(mEventNo, mEventType),
+                                      playerNum(mPlayerNum), playerName(std::move(mPlayerName)), x(mX), y(mY) {}
 
     virtual ~Pixel() = default;
     std::string getByteRepresentationServer() const noexcept override;
     std::string getByteRepresentationClient() const noexcept override;
   private:
     uint8_t playerNum;
+    std::string playerName;
     uint32_t x;
     uint32_t y;
 };
 
 class PlayerEliminated : public Event {
   public:
-    PlayerEliminated(uint32_t mEventNo, uint8_t mEventType, uint8_t mPlayerNum) : Event(mEventNo, mEventType),
-                                                                                  playerNum(mPlayerNum) {};
+    PlayerEliminated(uint32_t mEventNo, uint8_t mEventType, uint8_t mPlayerNum, std::string mPlayerName) :
+      Event(mEventNo, mEventType), playerNum(mPlayerNum), playerName(std::move(mPlayerName)) {}
+
     virtual ~PlayerEliminated() = default;
     std::string getByteRepresentationServer() const noexcept override;
     std::string getByteRepresentationClient() const noexcept override;
   private:
     uint8_t playerNum;
+    std::string playerName;
 };
 
 class GameOver : public Event {

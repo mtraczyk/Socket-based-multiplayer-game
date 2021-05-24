@@ -41,7 +41,17 @@ std::string NewGame::getByteRepresentationServer() const noexcept {
 }
 
 std::string NewGame::getByteRepresentationClient() const noexcept {
-  return std::string();
+  std::string eventDatagram = "NEW_GAME ";
+  addNumber(eventDatagram, maxx);
+  eventDatagram += " ";
+  addNumber(eventDatagram, maxy);
+
+  for (const auto &u : playersNames) {
+    eventDatagram += " " + u;
+  }
+  eventDatagram += "\n";
+
+  return eventDatagram;
 }
 
 std::string Pixel::getByteRepresentationServer() const noexcept {
@@ -56,7 +66,13 @@ std::string Pixel::getByteRepresentationServer() const noexcept {
 }
 
 std::string Pixel::getByteRepresentationClient() const noexcept {
-  return std::string();
+  std::string eventDatagram = "PIXEL ";
+  addNumber(eventDatagram, x);
+  eventDatagram += " ";
+  addNumber(eventDatagram, y);
+  eventDatagram += " " + playerName + "\n";
+
+  return eventDatagram;
 }
 
 std::string PlayerEliminated::getByteRepresentationServer() const noexcept {
@@ -70,7 +86,10 @@ std::string PlayerEliminated::getByteRepresentationServer() const noexcept {
 }
 
 std::string PlayerEliminated::getByteRepresentationClient() const noexcept {
-  return std::string();
+  std::string eventDatagram = "PLAYER_ELIMINATED";
+  eventDatagram += " " + playerName + "\n";
+
+  return eventDatagram;
 }
 
 std::string GameOver::getByteRepresentationServer() const noexcept {
@@ -79,9 +98,5 @@ std::string GameOver::getByteRepresentationServer() const noexcept {
   generateEventInfo(eventDatagramPart, eventNo, eventType);
 
   return finalDatagram(eventDatagramPart);
-}
-
-std::string GameOver::getByteRepresentationClient() const noexcept {
-  return std::string();
 }
 

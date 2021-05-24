@@ -79,6 +79,7 @@ u_short activePlayersNum = 0;
 bool gamePlayed = false; // indicates whether a game is being played
 uint32_t gameId; // every game has a randomly generated id
 u_short playersInTheGame = 0; // number of people in a particular game
+std::string playingPlayerName[DATA_ARR_SIZE]; // the names are store sorted
 
 // socket connection data
 struct sockaddr_in auxClientAddress;
@@ -428,19 +429,25 @@ namespace {
   }
 
   inline void addPlayerEliminatedEvent(uint8_t playerNum) {
-    Event *aux = new PlayerEliminated(events().size(), PLAYER_ELIMINATED, playerNum);
+    Event *aux = new PlayerEliminated(events().size(), PLAYER_ELIMINATED, playerNum, playingPlayerName[playerNum]);
     events().push_back(aux);
     playersInTheGame--;
   }
 
   inline void addPixelEvent(uint8_t playerNum, uint16_t x, uint16_t y) {
-    Event *aux = new Pixel(events().size(), PIXEL, playerNum, x, y);
+    Event *aux = new Pixel(events().size(), PIXEL, playerNum, playingPlayerName[playerNum], x, y);
     events().push_back(aux);
   }
 
   inline void addGameOverEvent() {
     Event *aux = new GameOver(events().size(), GAME_OVER);
     events().push_back(aux);
+  }
+
+  inline void updateCurrentlyPlayingPlayers(std::vector<std::string> const &players) {
+    for (uint32_t i = 0; i < players.size(); i++) {
+      playingPlayerName[i] = players[i];
+    }
   }
 
   // send new event to all the players
@@ -464,6 +471,7 @@ namespace {
       gameId = deterministicRand();
       playersInTheGame = 0;
       std::vector<std::string> players(namesUsed().begin(), namesUsed().end());
+      updateCurrentlyPlayingPlayers(players);
 
       Event *aux = new NewGame(0, NEW_GAME, boardWidth, boardHeight, players);
       events().push_back(aux);
