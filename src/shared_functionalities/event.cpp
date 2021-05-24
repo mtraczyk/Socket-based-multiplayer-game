@@ -100,3 +100,7 @@ std::string GameOver::getByteRepresentationServer() const noexcept {
   return finalDatagram(eventDatagramPart);
 }
 
+std::string GameOver::getByteRepresentationClient() const noexcept {
+  return "GAME_OVER\n";
+}
+
