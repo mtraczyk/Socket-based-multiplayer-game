@@ -17,6 +17,7 @@ struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 struct itimerspec newValue;
 struct timespec now; // auxiliary struct to store current time
+struct sockaddr_in gameServerAddress;
 
 namespace {
   int getGuiSocket(std::string const &guiServer, uint16_t guiServerPort) {
@@ -64,7 +65,7 @@ namespace {
     newValue.it_value.tv_nsec = now.tv_nsec + FREQUENCY; // first expiration time
     newValue.it_interval.tv_sec = 0;
     newValue.it_interval.tv_nsec = FREQUENCY; // period
-    if (timerfd_settime(pfds[2].fd, TFD_TIMER_ABSTIME, &newValue, NULL) == -1) {
+    if (timerfd_settime(pfds[2].fd, TFD_TIMER_ABSTIME, &newValue, nullptr) == -1) {
       syserr("timerfd_settime");
     }
   }
@@ -84,6 +85,32 @@ namespace {
     }
   }
 
+  void setGameServerAddress(std::string const &gameServer, uint16_t gameServerPort) {
+    struct addrinfo addrHints;
+    struct addrinfo *addrResult;
+
+    // 'converting' host/port in string to struct addrinfo
+    (void) memset(&addrHints, 0, sizeof(struct addrinfo));
+    addrHints.ai_family = AF_INET6; // IPv6
+    addrHints.ai_socktype = SOCK_DGRAM;
+    addrHints.ai_protocol = IPPROTO_UDP;
+    addrHints.ai_flags = 0;
+    addrHints.ai_addrlen = 0;
+    addrHints.ai_addr = nullptr;
+    addrHints.ai_canonname = nullptr;
+    addrHints.ai_next = nullptr;
+    if (getaddrinfo(gameServer.c_str(), nullptr, &addrHints, &addrResult) != 0) {
+      syserr("getaddrinfo");
+    }
+
+    gameServerAddress.sin_family = AF_INET6; // IPv6
+    gameServerAddress.sin_addr.s_addr =
+      ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
+    gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
+
+    freeaddrinfo(addrResult);
+  }
+
   void checkMessageFromGameServer() {
 
   }
@@ -101,30 +128,7 @@ void client(std::string const &gameServer, std::string const &playerName,
             uint16_t gameServerPort, std::string const &guiServer, uint16_t guiServerPort) {
   int guiSocket = getGuiSocket(guiServer, guiServerPort); // obtains socket for client - gui connection
   int udpSocket, ready;
-  struct addrinfo addrHints;
-  struct addrinfo *addrResult;
-  struct sockaddr_in myAddress;
-
-  // 'converting' host/port in string to struct addrinfo
-  (void) memset(&addrHints, 0, sizeof(struct addrinfo));
-  addrHints.ai_family = AF_INET6; // IPv6
-  addrHints.ai_socktype = SOCK_DGRAM;
-  addrHints.ai_protocol = IPPROTO_UDP;
-  addrHints.ai_flags = 0;
-  addrHints.ai_addrlen = 0;
-  addrHints.ai_addr = NULL;
-  addrHints.ai_canonname = NULL;
-  addrHints.ai_next = NULL;
-  if (getaddrinfo(gameServer.c_str(), NULL, &addrHints, &addrResult) != 0) {
-    syserr("getaddrinfo");
-  }
-
-  myAddress.sin_family = AF_INET6; // IPv6
-  myAddress.sin_addr.s_addr =
-    ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
-  myAddress.sin_port = htons(gameServerPort); // port from the command line
-
-  freeaddrinfo(addrResult);
+  setGameServerAddress(gameServer, gameServerPort);
 
   udpSocket = socket(PF_INET, SOCK_DGRAM, 0);
   if (udpSocket < 0) {
