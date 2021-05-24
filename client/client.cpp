@@ -72,7 +72,7 @@ namespace {
   inline void setPollfdArray(int guiSocket, int udpSocket) {
     pfds[0].fd = guiSocket;
     pfds[1].fd = udpSocket;
-    pfds[2].fd = = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
+    pfds[2].fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
     if (pfds[2].fd == -1) {
       syserr("timerfd_create");
     }
