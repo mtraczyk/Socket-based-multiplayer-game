@@ -6,15 +6,20 @@
 #include <poll.h>
 #include <sys/timerfd.h>
 #include <iostream>
+#include <chrono>
 
 #include "client.h"
 #include "../shared_functionalities/err.h"
+#include "../shared_functionalities/parsing_functionalities.h"
 
 #define DATA_ARR_SIZE 3
 #define FREQUENCY 30000000 // how frequent are messages to the game server in nanoseconds
 #define BUFFER_SIZE 4096
 #define KEY_UP 0
 #define KEY_DOWN 1
+#define STRAIGHT 0
+#define RIGHT 1
+#define LEFT 2
 
 struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
@@ -26,6 +31,8 @@ uint8_t leftKey = KEY_UP;
 uint8_t rightKey = KEY_UP;
 std::string guiMessages; // used to store fragments that are yet to be parsed
 std::string possibleGuiMessages[4] = {"LEFT_KEY_DOWN", "LEFT_KEY_UP", "RIGHT_KEY_DOWN", "RIGHT_KEY_UP"};
+uint64_t sessionId;
+uint32_t nextExpectedEventNo = 0; // equals zero when a new game starts
 
 namespace {
   int getGuiSocket(std::string const &guiServer, uint16_t guiServerPort) {
@@ -155,34 +162,91 @@ namespace {
     guiMessages = aux; // if there is something left, it needs to be saved
   }
 
-  void checkMessageFromGui(int guiSocket) {
-    if (pfds[0].revents != 0) {
-      if (pfds[0].revents & POLLIN) {
-        // there is a message from gui
-        cleanBuffer();
-        int len = read(guiSocket, buffer, sizeof(buffer) - 1);
-        if (len < 0) {
-          syserr("read");
-        }
-
-        parseGuiMessage(std::string(buffer));
+  inline bool checkPollStatus(uint8_t arrayIndex) {
+    if (pfds[arrayIndex].revents != 0) {
+      if (pfds[arrayIndex].revents & POLLIN) {
+        return true;
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
       }
     }
+
+    return false;
+  }
+
+  void checkMessageFromGui(int guiSocket) {
+    if (checkPollStatus(0)) {
+      // there is a message from gui
+      cleanBuffer();
+      int len = read(guiSocket, buffer, sizeof(buffer) - 1);
+      if (len < 0) {
+        syserr("read");
+      }
+
+      parseGuiMessage(std::string(buffer));
+    }
   }
 
   void checkMessageFromGameServer() {
+    if (checkPollStatus(1)) {
 
+    }
   }
 
-  void checkSendMessageToGameServer() {
+  inline int setTurnDirection() {
+    if (leftKey == rightKey) {
+      return STRAIGHT;
+    } else if (leftKey == KEY_DOWN) {
+      return LEFT;
+    }
 
+    return RIGHT;
+  }
+
+  void sendMessageToGameServer(int udpSocket, std::string const &message) {
+    auto numberOfBytesYetToBeWritten = message.size();
+    auto messageAsACString = message.c_str();
+    int sflags = 0;
+    auto rcvaLen = (socklen_t) sizeof(gameServerAddress);
+    auto len = sendto(udpSocket, messageAsACString, numberOfBytesYetToBeWritten, sflags,
+                      (struct sockaddr *) &gameServerAddress, rcvaLen);
+    if (len < 0) {
+      syserr("write");
+    }
+    auto numberOfBytesAlreadyWritten = len;
+    numberOfBytesYetToBeWritten -= len;
+
+    // Size of the message might be bigger than the buffer's size.
+    while (numberOfBytesYetToBeWritten != 0) {
+      len = sendto(udpSocket, messageAsACString, numberOfBytesYetToBeWritten, sflags,
+                   (struct sockaddr *) &gameServerAddress, rcvaLen);
+      if (len < 0) {
+        syserr("write");
+      }
+
+      numberOfBytesAlreadyWritten += len;
+      numberOfBytesYetToBeWritten -= len;
+    }
+  }
+
+  void checkSendMessageToGameServer(int udpSocket, std::string const &playerName) {
+    if (checkPollStatus(2)) {
+      std::string message;
+      int turnDirection = setTurnDirection();
+      addNumber(message, sessionId);
+      addNumber(message, turnDirection);
+      addNumber(message, nextExpectedEventNo);
+      message += playerName;
+
+      sendMessageToGameServer(udpSocket, message);
+    }
   }
 }
 
 void client(std::string const &gameServer, std::string const &playerName,
             uint16_t gameServerPort, std::string const &guiServer, uint16_t guiServerPort) {
+  sessionId = std::chrono::duration_cast<std::chrono::milliseconds>(
+    std::chrono::system_clock::now().time_since_epoch()).count();
   int guiSocket = getGuiSocket(guiServer, guiServerPort); // obtains socket for client - gui connection
   int udpSocket, ready;
   setGameServerAddress(gameServer, gameServerPort);
@@ -202,7 +266,7 @@ void client(std::string const &gameServer, std::string const &playerName,
 
     checkMessageFromGui(guiSocket);
     checkMessageFromGameServer();
-    checkSendMessageToGameServer();
+    checkSendMessageToGameServer(udpSocket, playerName);
   }
 
   (void) close(guiSocket);
