@@ -1,5 +1,6 @@
 #include "event.h"
 #include "../server/parsing_functionalities.h"
+#include "parsing_functionalities.h"
 #include "crc32.h"
 
 namespace {
@@ -7,12 +8,6 @@ namespace {
     auto byteArray = toByte(eventNo);
     datagram = std::string(byteArray.begin(), byteArray.end());
     byteArray = toByte(eventType);
-    datagram += std::string(byteArray.begin(), byteArray.end());
-  }
-
-  template<typename T>
-  void addNumber(std::string &datagram, T number) {
-    auto byteArray = toByte(number);
     datagram += std::string(byteArray.begin(), byteArray.end());
   }
 
