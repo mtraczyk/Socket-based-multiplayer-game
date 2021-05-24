@@ -27,7 +27,7 @@ namespace {
   }
 }
 
-std::string NewGame::getByteRepresentationSever() const noexcept {
+std::string NewGame::getByteRepresentationServer() const noexcept {
   std::string eventDatagramPart; // variable to store part of datagram data
   generateEventInfo(eventDatagramPart, eventNo, eventType);
 
@@ -38,6 +38,10 @@ std::string NewGame::getByteRepresentationSever() const noexcept {
   }
 
   return finalDatagram(eventDatagramPart);
+}
+
+std::string NewGame::getByteRepresentationClient() const noexcept {
+  return std::string();
 }
 
 std::string Pixel::getByteRepresentationServer() const noexcept {
@@ -51,6 +55,10 @@ std::string Pixel::getByteRepresentationServer() const noexcept {
   return finalDatagram(eventDatagramPart);
 }
 
+std::string Pixel::getByteRepresentationClient() const noexcept {
+  return std::string();
+}
+
 std::string PlayerEliminated::getByteRepresentationServer() const noexcept {
   std::string eventDatagramPart; // variable to store part of datagram data
   std::string eventPartLength;
@@ -61,11 +69,19 @@ std::string PlayerEliminated::getByteRepresentationServer() const noexcept {
   return finalDatagram(eventDatagramPart);
 }
 
+std::string PlayerEliminated::getByteRepresentationClient() const noexcept {
+  return std::string();
+}
+
 std::string GameOver::getByteRepresentationServer() const noexcept {
   std::string eventDatagramPart; // variable to store part of datagram data
   std::string eventPartLength;
   generateEventInfo(eventDatagramPart, eventNo, eventType);
 
   return finalDatagram(eventDatagramPart);
+}
+
+std::string GameOver::getByteRepresentationClient() const noexcept {
+  return std::string();
 }
 
