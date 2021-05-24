@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <unistd.h>
 
 #include "client.h"
 #include "../err/err.h"
@@ -34,6 +35,8 @@ namespace {
       syserr("connect");
 
     freeaddrinfo(addrResult);
+
+    return sock;
   }
 }
 
