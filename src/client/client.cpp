@@ -142,7 +142,7 @@ namespace {
       if (pfds[arrayIndex].revents & POLLIN) {
         return true;
       } else { /* POLLERR | POLLHUP */
-        syserr("turn timer error");
+        syserr("check poll error");
       }
     }
 
