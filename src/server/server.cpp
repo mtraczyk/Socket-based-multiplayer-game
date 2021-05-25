@@ -68,7 +68,7 @@ struct itimerspec newValue[DATA_ARR_SIZE];
 struct timespec now; // auxiliary struct to store current time
 
 // active players' info.
-struct sockaddr_in clientAddress[DATA_ARR_SIZE];
+struct sockaddr_in6 clientAddress[DATA_ARR_SIZE];
 time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
 uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
 uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
@@ -85,8 +85,8 @@ u_short playersInTheGame = 0; // number of people in a particular game
 std::string playingPlayerName[DATA_ARR_SIZE]; // the names are store sorted
 
 // socket connection data
-struct sockaddr_in auxClientAddress;
-struct sockaddr_in auxSockInfo;
+struct sockaddr_in6 auxClientAddress;
+struct sockaddr_in6 auxSockInfo;
 socklen_t clientAddressLen, rcvaLen, sndaLen;
 int flags, sndFlags, len;
 
@@ -402,7 +402,7 @@ namespace {
 
     if (isDatagramCorrect(len, &auxSessionId, &auxTurnDirection, &nextExpectedEventNo, auxPlayerName)) {
       // datagram is correct but still might be ignored
-      auxSockInfo = (struct sockaddr_in) auxClientAddress;
+      auxSockInfo = (struct sockaddr_in6) auxClientAddress;
       std::pair<int, int> clientConnected = isClientConnected();
 
       if (clientConnected.first == SUCCESS && auxSessionId <= sessionId[clientConnected.second]) {
