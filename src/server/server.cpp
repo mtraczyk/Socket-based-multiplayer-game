@@ -326,8 +326,8 @@ namespace {
       }
     }
 
-    uint32_T numberOfBytesInGameId = 4;
-    if (datagram.size() == numberOfBytesInGameId) {
+    uint32_t numberOfBytesInGameId = 4;
+    if (datagram.size() != numberOfBytesInGameId) {
       sendDatagram(datagram, sock);
     }
   }
