@@ -162,9 +162,11 @@ namespace {
     }
   }
 
-  void checkMessageFromGameServer() {
+  void checkMessageFromGameServer(int udpSocket) {
     if (checkPollStatus(1)) {
-
+      int rcvFlags = 0;
+      int rcvLen = recv(udpSocket, buffer, BUFFER_SIZE, rcvFlags);
+      printf("%s\n", buffer);
     }
   }
 
@@ -256,7 +258,7 @@ void client(std::string const &gameServer, std::string const &playerName,
     }
 
     checkMessageFromGui(guiSocket);
-    checkMessageFromGameServer();
+    checkMessageFromGameServer(udpSocket);
     checkSendMessageToGameServer(udpSocket, playerName);
   }
 
