@@ -186,18 +186,22 @@ namespace {
       messageAsACArray[i] = message[i];
     }
 
-    auto len = write(udpSocket, messageAsACArray, numberOfBytesYetToBeWritten);
+    int sflags = 0;
+    int rcvaLen = (socklen_t) sizeof(gameServerAddress);
+    auto len = sendto(udpSocket, messageAsACArray, numberOfBytesYetToBeWritten, sflags,
+                      (struct sockaddr *) &gameServerAddress, rcvaLen);
     if (len < 0) {
-      syserr("write");
+      syserr("sendto");
     }
     auto numberOfBytesAlreadyWritten = len;
     numberOfBytesYetToBeWritten -= len;
 
     // Size of the message might be bigger than the buffer's size.
     while (numberOfBytesYetToBeWritten != 0) {
-      len = write(udpSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten);
+      len = sendto(udpSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten, sflags,
+                   (struct sockaddr *) &gameServerAddress, rcvaLen);
       if (len < 0) {
-        syserr("write");
+        syserr("sendto");
       }
 
       numberOfBytesAlreadyWritten += len;
@@ -244,9 +248,10 @@ void client(std::string const &gameServer, std::string const &playerName,
     syserr("socket");
   }
 
-  if (connect(udpSocket, addrResult->ai_addr, addrResult->ai_addrlen) != 0) {
-    syserr("connect on UDP socket");
-  }
+  gameServerAddress.sin_family = addrResult->ai_family; // IPv4 or IPv6
+  gameServerAddress.sin_addr.s_addr =
+    ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
+  gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
 
   freeaddrinfo(addrResult);
   setPollfdArray(guiSocket, udpSocket); // sets the array that will be used for polling
