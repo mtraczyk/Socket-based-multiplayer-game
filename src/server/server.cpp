@@ -301,7 +301,10 @@ namespace {
     /* Ignore errors, we don't want the server to go down.
      * sock is non blocking.
      */
-    sendto(sock, messageAsACArray, datagram.size(), sendFlags, (struct sockaddr *) &auxClientAddress, sndaLen);
+    int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, (struct sockaddr *) &auxClientAddress, sndaLen);
+    if (len < 0) {
+      syserr("send message to a client");
+    }
   }
 
   void sendDatagrams(uint32_t nextExpectedEventNo, int sock) {
