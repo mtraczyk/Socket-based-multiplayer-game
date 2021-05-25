@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <arpa/inet.h>
 
 using byte = uint8_t;
 

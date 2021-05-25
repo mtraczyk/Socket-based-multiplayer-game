@@ -235,9 +235,7 @@ void client(std::string const &gameServer, std::string const &playerName,
   (void) memset(&addrHints, 0, sizeof(struct addrinfo));
   addrHints.ai_family = AF_UNSPEC; // IPv6
   addrHints.ai_socktype = SOCK_DGRAM;
-  addrHints.ai_protocol = IPPROTO_UDP;
   addrHints.ai_flags = 0;
-  addrHints.ai_addrlen = 0;
   addrHints.ai_addr = nullptr;
   addrHints.ai_canonname = nullptr;
   addrHints.ai_next = nullptr;
