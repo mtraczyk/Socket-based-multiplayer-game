@@ -392,9 +392,9 @@ namespace {
     len = recvfrom(sock, buffer, sizeof(buffer), flags, (struct sockaddr *) &auxClientAddress, &rcvaLen);
 
     // variables to store client's data
-    uint64_t auxSessionId;
-    uint8_t auxTurnDirection;
-    uint32_t nextExpectedEventNo;
+    uint64_t auxSessionId = 0;
+    uint8_t auxTurnDirection = 0;
+    uint32_t nextExpectedEventNo = 0;
     std::string auxPlayerName;
 
     if (isDatagramCorrect(len, &auxSessionId, &auxTurnDirection, &nextExpectedEventNo, auxPlayerName)) {
@@ -413,7 +413,7 @@ namespace {
 
   // counts number of players that want to participate in a game
   inline int numberOfReadyPlayers() {
-    int counter;
+    int counter = 0;
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (lastActivity[i] != 0 && !playerName[i].empty() && turnDirection[i] != 0) {
         counter++;
@@ -468,9 +468,9 @@ namespace {
     //set timer
     newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
     newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec + nanoSecPeriod; // first expiration time
-    newValue[DATA_ARR_SIZE].it_interval.tv_sec = 0;
-    newValue[DATA_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
-    if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE], NULL) == -1) {
+    newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 0;
+    newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = nanoSecPeriod; // period
+    if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE - 1], NULL) == -1) {
       syserr("timerfd_settime");
     }
   }
