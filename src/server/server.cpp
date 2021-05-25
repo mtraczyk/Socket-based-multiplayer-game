@@ -225,7 +225,7 @@ namespace {
     char *clientIP = new char[INET6_ADDRSTRLEN];
     char *auxIP = new char[INET6_ADDRSTRLEN];
     in_port_t clientPort;
-    in_port_t auxPort = auxClientAddress.sin_port;
+    in_port_t auxPort = auxClientAddress.sin6_port;
 
     auxIP = const_cast<char *>(inet_ntop(AF_INET6, &auxClientAddress, auxIP, INET6_ADDRSTRLEN));
     if (auxIP != nullptr) {
@@ -238,7 +238,7 @@ namespace {
             break;
           }
 
-          clientPort = clientAddress[i].sin_port;
+          clientPort = clientAddress[i].sin6_port;
           if (std::string(auxIP) == std::string(clientIP) && auxPort == clientPort) {
             codeResult = SUCCESS;
             clientNumber = i;
@@ -326,7 +326,7 @@ namespace {
       }
     }
 
-    int numberOfBytesInGameId = 4;
+    uint32_T numberOfBytesInGameId = 4;
     if (datagram.size() == numberOfBytesInGameId) {
       sendDatagram(datagram, sock);
     }
