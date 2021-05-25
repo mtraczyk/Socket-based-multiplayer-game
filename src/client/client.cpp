@@ -167,7 +167,7 @@ namespace {
     }
   }
 
-  inline int setTurnDirection() {
+  inline uint8_t setTurnDirection() {
     if (leftKey == rightKey) {
       return STRAIGHT;
     } else if (leftKey == KEY_DOWN) {
@@ -206,7 +206,7 @@ namespace {
   void checkSendMessageToGameServer(int udpSocket, std::string const &playerName) {
     if (checkPollStatus(2)) {
       std::string message;
-      int turnDirection = setTurnDirection();
+      uint8_t turnDirection = setTurnDirection();
       addNumber(message, sessionId);
       addNumber(message, turnDirection);
       addNumber(message, nextExpectedEventNo);
