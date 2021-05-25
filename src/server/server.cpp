@@ -540,13 +540,13 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     syserr("setsockopt");
   }
 
-  if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
-    syserr("fctl failed");
-  }
-
   // bind the socket to a concrete address
   if (bind(sock, (struct sockaddr *) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
     syserr("bind, address taken.");
+  }
+
+  if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
+    syserr("fctl failed");
   }
 
   signal(SIGPIPE, SIG_IGN); // Ignoring SIGPIPE.

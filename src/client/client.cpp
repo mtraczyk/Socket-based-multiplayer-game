@@ -233,11 +233,9 @@ void client(std::string const &gameServer, std::string const &playerName,
   addrHints.ai_family = AF_UNSPEC; // IPv6 or IPv4
   addrHints.ai_socktype = SOCK_DGRAM;
   addrHints.ai_flags = IPPROTO_UDP;
-  if (getaddrinfo(gameServer.c_str(), nullptr, &addrHints, &addrResult) != 0) {
+  if (getaddrinfo(gameServer.c_str(), std::to_string(gameServerPort).c_str(), &addrHints, &addrResult) != 0) {
     syserr("getaddrinfo");
   }
-
-  gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
 
   udpSocket = socket(addrResult->ai_family, SOCK_DGRAM, IPPROTO_UDP);
   if (udpSocket < 0) {
