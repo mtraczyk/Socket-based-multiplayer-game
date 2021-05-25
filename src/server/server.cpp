@@ -117,6 +117,7 @@ namespace {
   void setPollfdArray(int sock) {
     pfds[0].fd = sock; // first descriptor in the array is socket's descriptor
     pfds[0].events = POLLIN; // poll will be done for POLLIN
+    pfds[0].revents = 0;
 
     for (int i = 1; i < DATA_ARR_SIZE; i++) {
       pfds[i].fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
@@ -125,6 +126,7 @@ namespace {
       }
 
       pfds[i].events = POLLIN;
+      pfds[i].revents = 0;
     }
   }
 
@@ -175,19 +177,9 @@ namespace {
     }
   }
 
-  void checkNextTurn(time_t nanoSecPeriod, uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
+  void checkNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
-        getCurrentTime();
-        //set timer again
-        newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec; // first expiration time
-        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec + nanoSecPeriod;
-        newValue[DATA_ARR_SIZE].it_interval.tv_sec = 0;
-        newValue[DATA_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
-        if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE], NULL) == -1) {
-          syserr("timerfd_settime");
-        }
-
         performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
@@ -446,6 +438,7 @@ namespace {
   inline void addGameOverEvent() {
     Event *aux = new GameOver(events().size(), GAME_OVER);
     events().push_back(aux);
+    disarmATimer(DATA_ARR_SIZE - 1);
   }
 
   inline void updateCurrentlyPlayingPlayers(std::vector<std::string> const &players) {
@@ -464,7 +457,19 @@ namespace {
     }
   }
 
-  void newGame(uint32_t boardWidth, uint32_t boardHeight, int sock) {
+  inline void setRoundTimer(time_t nanoSecPeriod) {
+    getCurrentTime();
+    //set timer
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec + nanoSecPeriod; // first expiration time
+    newValue[DATA_ARR_SIZE].it_interval.tv_sec = 0;
+    newValue[DATA_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
+    if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE], NULL) == -1) {
+      syserr("timerfd_settime");
+    }
+  }
+
+  void newGame(time_t nanoSecPeriod, uint32_t boardWidth, uint32_t boardHeight, int sock) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
       for (auto u : events()) {
         delete u;
@@ -478,6 +483,7 @@ namespace {
       updateCurrentlyPlayingPlayers(players);
 
       Event *aux = new NewGame(0, NEW_GAME, boardWidth, boardHeight, players);
+      setRoundTimer(nanoSecPeriod);
       events().push_back(aux);
       sendEvent(sock);
 
@@ -550,10 +556,12 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     /* Checks whether timer for the next round had expired.
      * If that's the case needed operations are performed.
      */
-    checkNextTurn(NANO_SEC / roundsPerSecond, turningSpeed, boardWidth, boardHeight, sock);
+    if (gamePlayed) {
+      checkNextTurn(turningSpeed, boardWidth, boardHeight, sock);
+    }
     checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
-    newGame(boardWidth, boardHeight, sock); // check the possibility of starting a new game
+    newGame(NANO_SEC / roundsPerSecond, boardWidth, boardHeight, sock); // check the possibility of starting a new game
   }
 
   if (close(sock) == -1) { // very rare errors can occur here, but then
