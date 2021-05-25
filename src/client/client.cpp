@@ -245,13 +245,16 @@ void client(std::string const &gameServer, std::string const &playerName,
     ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
   gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
 
-  freeaddrinfo(addrResult);
-
   udpSocket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (udpSocket < 0) {
     syserr("socket");
   }
 
+  if (connect(udpSocket, addrResult->ai_addr, addrResult->ai_addrlen) != 0) {
+    syserr("connect on UDP socket");
+  }
+
+  freeaddrinfo(addrResult);
   setPollfdArray(guiSocket, udpSocket); // sets the array that will be used for polling
 
   for (;;) {
