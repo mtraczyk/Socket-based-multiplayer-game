@@ -233,7 +233,7 @@ void client(std::string const &gameServer, std::string const &playerName,
 
   // 'converting' host/port in string to struct addrinfo
   (void) memset(&addrHints, 0, sizeof(struct addrinfo));
-  addrHints.ai_family = AF_INET6; // IPv6
+  addrHints.ai_family = AF_UNSPEC; // IPv6
   addrHints.ai_socktype = SOCK_DGRAM;
   addrHints.ai_protocol = IPPROTO_UDP;
   addrHints.ai_flags = 0;
@@ -245,7 +245,7 @@ void client(std::string const &gameServer, std::string const &playerName,
     syserr("getaddrinfo");
   }
 
-  gameServerAddress.sin_family = AF_INET6; // IPv6
+  gameServerAddress.sin_family = AF_UNSPEC; // IPv6
   gameServerAddress.sin_addr.s_addr =
     ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
   gameServerAddress.sin_port = htons(gameServerPort); // port from the command line

@@ -525,6 +525,12 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   serverAddress.sin6_addr = in6addr_any; // listening on all interfaces
   serverAddress.sin6_port = htons(portNum); // port number is stored in portNum
 
+  int v6OnlyEnabled = 0; // disable v-6 only mode
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6OnlyEnabled, sizeof(v6OnlyEnabled)) != 0) {
+    syserr("setsockopt");
+  }
+
+
   // bind the socket to a concrete address
   if (bind(sock, (struct sockaddr *) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
     syserr("bind, address taken.");
