@@ -100,32 +100,6 @@ namespace {
     }
   }
 
-  void setGameServerAddress(std::string const &gameServer, uint16_t gameServerPort) {
-    struct addrinfo addrHints;
-    struct addrinfo *addrResult;
-
-    // 'converting' host/port in string to struct addrinfo
-    (void) memset(&addrHints, 0, sizeof(struct addrinfo));
-    addrHints.ai_family = AF_INET6; // IPv6
-    addrHints.ai_socktype = SOCK_DGRAM;
-    addrHints.ai_protocol = IPPROTO_UDP;
-    addrHints.ai_flags = 0;
-    addrHints.ai_addrlen = 0;
-    addrHints.ai_addr = nullptr;
-    addrHints.ai_canonname = nullptr;
-    addrHints.ai_next = nullptr;
-    if (getaddrinfo(gameServer.c_str(), nullptr, &addrHints, &addrResult) != 0) {
-      syserr("getaddrinfo");
-    }
-
-    gameServerAddress.sin_family = AF_INET6; // IPv6
-    gameServerAddress.sin_addr.s_addr =
-      ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
-    gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
-
-    freeaddrinfo(addrResult);
-  }
-
   inline void cleanBuffer() {
     for (char &i : buffer) {
       if (i != 0) {
@@ -211,7 +185,7 @@ namespace {
     auto len = sendto(udpSocket, messageAsACString, numberOfBytesYetToBeWritten, sflags,
                       (struct sockaddr *) &gameServerAddress, rcvaLen);
     if (len < 0) {
-      syserr("write");
+      syserr("sendto");
     }
     auto numberOfBytesAlreadyWritten = len;
     numberOfBytesYetToBeWritten -= len;
@@ -221,7 +195,7 @@ namespace {
       len = sendto(udpSocket, messageAsACString, numberOfBytesYetToBeWritten, sflags,
                    (struct sockaddr *) &gameServerAddress, rcvaLen);
       if (len < 0) {
-        syserr("write");
+        syserr("sendto");
       }
 
       numberOfBytesAlreadyWritten += len;
@@ -249,7 +223,31 @@ void client(std::string const &gameServer, std::string const &playerName,
     std::chrono::system_clock::now().time_since_epoch()).count();
   int guiSocket = getGuiSocket(guiServer, guiServerPort); // obtains socket for client - gui connection
   int udpSocket, ready;
-  setGameServerAddress(gameServer, gameServerPort);
+
+  // set udp socket for client - game server communication
+  struct addrinfo addrHints;
+  struct addrinfo *addrResult;
+
+  // 'converting' host/port in string to struct addrinfo
+  (void) memset(&addrHints, 0, sizeof(struct addrinfo));
+  addrHints.ai_family = AF_INET6; // IPv6
+  addrHints.ai_socktype = SOCK_DGRAM;
+  addrHints.ai_protocol = IPPROTO_UDP;
+  addrHints.ai_flags = 0;
+  addrHints.ai_addrlen = 0;
+  addrHints.ai_addr = nullptr;
+  addrHints.ai_canonname = nullptr;
+  addrHints.ai_next = nullptr;
+  if (getaddrinfo(gameServer.c_str(), nullptr, &addrHints, &addrResult) != 0) {
+    syserr("getaddrinfo");
+  }
+
+  gameServerAddress.sin_family = AF_INET6; // IPv6
+  gameServerAddress.sin_addr.s_addr =
+    ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
+  gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
+
+  freeaddrinfo(addrResult);
 
   udpSocket = socket(PF_INET, SOCK_DGRAM, 0);
   if (udpSocket < 0) {
