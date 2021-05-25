@@ -12,6 +12,7 @@
 #include <vector>
 #include <cmath>
 #include <csignal>
+#include <fcntl.h>
 
 #include "server.h"
 #include "../shared_functionalities/err.h"
@@ -524,7 +525,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   struct sockaddr_in6 serverAddress;
   randomNumber = seed; // first random number equals to the seed's value
 
-  sock = socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP); // IPv6 UDP nonblock socket
+  sock = socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP); // IPv6 UDP nonblock socket
 
   if (sock < 0) {
     syserr("socket");
@@ -537,6 +538,10 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   int v6OnlyEnabled = 0; // disable v-6 only mode
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6OnlyEnabled, sizeof(v6OnlyEnabled)) != 0) {
     syserr("setsockopt");
+  }
+
+  if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
+    syserr("fctl failed");
   }
 
   // bind the socket to a concrete address
