@@ -78,7 +78,7 @@ namespace {
     // set timer
     getCurrentTime();
     newValue.it_value.tv_sec = now.tv_sec;
-    newValue.it_value.tv_nsec = now.tv_nsec + FREQUENCY; // first expiration time
+    newValue.it_value.tv_nsec = now.tv_nsec; // first expiration time
     newValue.it_interval.tv_sec = 0;
     newValue.it_interval.tv_nsec = FREQUENCY; // period
     if (timerfd_settime(pfds[2].fd, TFD_TIMER_ABSTIME, &newValue, nullptr) == -1) {
