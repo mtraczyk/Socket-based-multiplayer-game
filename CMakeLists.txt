@@ -37,6 +37,6 @@ set(CLIENT_SOURCE_FILES
 
 
 # Wskazujemy plik wykonywalny.
-add_executable(server ${SERVER_SOURCE_FILES})
+add_executable(screen-worms-server ${SERVER_SOURCE_FILES})
 
-add_executable(client ${CLIENT_SOURCE_FILES})
+add_executable(screen-worms-client ${CLIENT_SOURCE_FILES})
