@@ -353,6 +353,9 @@ namespace {
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
     // find free index in the data array
     int index = findFreeIndex();
+    if (index == ERROR) {
+      fatal("index in processNewPlayer");
+    }
 
     // new activity being made
     getCurrentTime();
@@ -362,6 +365,8 @@ namespace {
     sessionId[index] = auxSessionId;
     turnDirection[index] = auxTurnDirection;
     playerName[index] = auxPlayerName;
+    clientAddress[index] = auxClientAddress;
+    activePlayersNum++;
     if (!auxPlayerName.empty()) {
       namesUsed().insert(auxPlayerName);
     }
