@@ -27,6 +27,7 @@ struct itimerspec newValue;
 struct timespec now; // auxiliary struct to store current time
 struct sockaddr_in gameServerAddress;
 char buffer[BUFFER_SIZE];
+char messageAsACArray[BUFFER_SIZE];
 uint8_t leftKey = KEY_UP;
 uint8_t rightKey = KEY_UP;
 std::string guiMessages; // used to store fragments that are yet to be parsed
@@ -179,10 +180,12 @@ namespace {
 
   void sendMessageToGameServer(int udpSocket, std::string const &message) {
     auto numberOfBytesYetToBeWritten = message.size();
-    auto messageAsACString = message.c_str();
+    for (uint32_t i = 0; i < message.size(); i++) {
+      messageAsACArray[i] = message[i];
+    }
     int sflags = 0;
     auto rcvaLen = (socklen_t) sizeof(gameServerAddress);
-    auto len = sendto(udpSocket, messageAsACString, numberOfBytesYetToBeWritten, sflags,
+    auto len = sendto(udpSocket, messageAsACArray, numberOfBytesYetToBeWritten, sflags,
                       (struct sockaddr *) &gameServerAddress, rcvaLen);
     if (len < 0) {
       syserr("sendto");
@@ -192,7 +195,7 @@ namespace {
 
     // Size of the message might be bigger than the buffer's size.
     while (numberOfBytesYetToBeWritten != 0) {
-      len = sendto(udpSocket, &messageAsACString[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten, sflags,
+      len = sendto(udpSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten, sflags,
                    (struct sockaddr *) &gameServerAddress, rcvaLen);
       if (len < 0) {
         syserr("sendto");
