@@ -235,10 +235,7 @@ void client(std::string const &gameServer, std::string const &playerName,
   (void) memset(&addrHints, 0, sizeof(struct addrinfo));
   addrHints.ai_family = AF_UNSPEC; // IPv6
   addrHints.ai_socktype = SOCK_DGRAM;
-  addrHints.ai_flags = 0;
-  addrHints.ai_addr = nullptr;
-  addrHints.ai_canonname = nullptr;
-  addrHints.ai_next = nullptr;
+  addrHints.ai_flags = IPPROTO_UDP;
   if (getaddrinfo(gameServer.c_str(), nullptr, &addrHints, &addrResult) != 0) {
     syserr("getaddrinfo");
   }
@@ -250,7 +247,7 @@ void client(std::string const &gameServer, std::string const &playerName,
 
   freeaddrinfo(addrResult);
 
-  udpSocket = socket(AF_INET6, SOCK_DGRAM, 0);
+  udpSocket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (udpSocket < 0) {
     syserr("socket");
   }
