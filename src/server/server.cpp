@@ -288,7 +288,7 @@ namespace {
       }
     }
 
-    return false;
+    return true;
   }
 
   void sendDatagram(std::string const &datagram, int sock) {
