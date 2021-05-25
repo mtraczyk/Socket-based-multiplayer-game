@@ -249,7 +249,7 @@ void client(std::string const &gameServer, std::string const &playerName,
 
   freeaddrinfo(addrResult);
 
-  udpSocket = socket(PF_INET, SOCK_DGRAM, 0);
+  udpSocket = socket(AF_INET6, SOCK_DGRAM, 0);
   if (udpSocket < 0) {
     syserr("socket");
   }

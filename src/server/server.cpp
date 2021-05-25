@@ -28,8 +28,6 @@
 #define DATA_ARR_SIZE MAX_NUM_OF_PLAYERS + 2
 #define MAX_DATAGRAM_SIZE 550 // datagram can be long up to 550
 #define DIS_TIME_SEC 2 // disconnection time in seconds
-#define NANO_SEC 1000000000 // one nanosecond
-#define DIS_TIME_NANO 2 * NANO_SEC // disconnection time in nanoseconds
 #define BUFFER_SIZE 1024
 #define CLIENT_DATAGRAM_MIN_SIZE 13 // session_id + turn_direction + next_expected_event_no = 13
 #define CLIENT_DATAGRAM_MAX_SIZE 33 // session_id + turn_direction + next_expected_event_no + player_name = 33
@@ -179,10 +177,10 @@ namespace {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         getCurrentTime();
         //set timer again
-        newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
-        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec + nanoSecPeriod; // first expiration time
-        newValue[DATA_ARR_SIZE].it_interval.tv_sec = 0;
-        newValue[DATA_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
+        newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec + DIS_TIME_SEC; // first expiration time
+        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec;
+        newValue[DATA_ARR_SIZE].it_interval.tv_sec = DIS_TIME_SEC;
+        newValue[DATA_ARR_SIZE].it_interval.tv_nsec = 0; // period
         if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE], NULL) == -1) {
           syserr("timerfd_settime");
         }
