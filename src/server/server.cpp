@@ -515,7 +515,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   struct sockaddr_in6 serverAddress;
   randomNumber = seed; // first random number equals to the seed's value
 
-  sock = socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, 0); // IPv6 UDP nonblock socket
+  sock = socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP); // IPv6 UDP nonblock socket
 
   if (sock < 0) {
     syserr("socket");
@@ -529,7 +529,6 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6OnlyEnabled, sizeof(v6OnlyEnabled)) != 0) {
     syserr("setsockopt");
   }
-
 
   // bind the socket to a concrete address
   if (bind(sock, (struct sockaddr *) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
