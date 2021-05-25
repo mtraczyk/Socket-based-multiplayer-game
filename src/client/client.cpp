@@ -192,7 +192,7 @@ namespace {
 
     // Size of the message might be bigger than the buffer's size.
     while (numberOfBytesYetToBeWritten != 0) {
-      len = sendto(udpSocket, messageAsACString, numberOfBytesYetToBeWritten, sflags,
+      len = sendto(udpSocket, &messageAsACString[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten, sflags,
                    (struct sockaddr *) &gameServerAddress, rcvaLen);
       if (len < 0) {
         syserr("sendto");
