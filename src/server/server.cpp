@@ -180,10 +180,10 @@ namespace {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         getCurrentTime();
         //set timer again
-        newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec + DIS_TIME_SEC; // first expiration time
-        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec;
-        newValue[DATA_ARR_SIZE].it_interval.tv_sec = DIS_TIME_SEC;
-        newValue[DATA_ARR_SIZE].it_interval.tv_nsec = 0; // period
+        newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec; // first expiration time
+        newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec + nanoSecPeriod;
+        newValue[DATA_ARR_SIZE].it_interval.tv_sec = 0;
+        newValue[DATA_ARR_SIZE].it_interval.tv_nsec = nanoSecPeriod; // period
         if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE], NULL) == -1) {
           syserr("timerfd_settime");
         }

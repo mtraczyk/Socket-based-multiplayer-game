@@ -230,19 +230,19 @@ void client(std::string const &gameServer, std::string const &playerName,
 
   // 'converting' host/port in string to struct addrinfo
   (void) memset(&addrHints, 0, sizeof(struct addrinfo));
-  addrHints.ai_family = AF_UNSPEC; // IPv6 or IPv4
+  addrHints.ai_family = AF_INET; // IPv6 or IPv4
   addrHints.ai_socktype = SOCK_DGRAM;
   addrHints.ai_flags = IPPROTO_UDP;
   if (getaddrinfo(gameServer.c_str(), nullptr, &addrHints, &addrResult) != 0) {
     syserr("getaddrinfo");
   }
 
-  gameServerAddress.sin_family = AF_UNSPEC; // IPv6 or IPv4
+  gameServerAddress.sin_family = AF_INET; // IPv6 or IPv4
   gameServerAddress.sin_addr.s_addr =
     ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
   gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
 
-  udpSocket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+  udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (udpSocket < 0) {
     syserr("socket");
   }
