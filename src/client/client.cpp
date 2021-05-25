@@ -186,7 +186,7 @@ namespace {
 
     auto len = write(udpSocket, messageAsACArray, numberOfBytesYetToBeWritten);
     if (len < 0) {
-      syserr("sendto");
+      syserr("write");
     }
     auto numberOfBytesAlreadyWritten = len;
     numberOfBytesYetToBeWritten -= len;
@@ -195,7 +195,7 @@ namespace {
     while (numberOfBytesYetToBeWritten != 0) {
       len = write(udpSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten);
       if (len < 0) {
-        syserr("sendto");
+        syserr("write");
       }
 
       numberOfBytesAlreadyWritten += len;
