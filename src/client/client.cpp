@@ -183,10 +183,8 @@ namespace {
     for (uint32_t i = 0; i < message.size(); i++) {
       messageAsACArray[i] = message[i];
     }
-    int sflags = 0;
-    auto rcvaLen = (socklen_t) sizeof(gameServerAddress);
-    auto len = sendto(udpSocket, messageAsACArray, numberOfBytesYetToBeWritten, sflags,
-                      (struct sockaddr *) &gameServerAddress, rcvaLen);
+
+    auto len = write(udpSocket, messageAsACArray, numberOfBytesYetToBeWritten);
     if (len < 0) {
       syserr("sendto");
     }
@@ -195,8 +193,7 @@ namespace {
 
     // Size of the message might be bigger than the buffer's size.
     while (numberOfBytesYetToBeWritten != 0) {
-      len = sendto(udpSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten, sflags,
-                   (struct sockaddr *) &gameServerAddress, rcvaLen);
+      len = write(udpSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten);
       if (len < 0) {
         syserr("sendto");
       }
@@ -233,14 +230,14 @@ void client(std::string const &gameServer, std::string const &playerName,
 
   // 'converting' host/port in string to struct addrinfo
   (void) memset(&addrHints, 0, sizeof(struct addrinfo));
-  addrHints.ai_family = AF_UNSPEC; // IPv6
+  addrHints.ai_family = AF_UNSPEC; // IPv6 or IPv4
   addrHints.ai_socktype = SOCK_DGRAM;
   addrHints.ai_flags = IPPROTO_UDP;
   if (getaddrinfo(gameServer.c_str(), nullptr, &addrHints, &addrResult) != 0) {
     syserr("getaddrinfo");
   }
 
-  gameServerAddress.sin_family = AF_UNSPEC; // IPv6
+  gameServerAddress.sin_family = AF_UNSPEC; // IPv6 or IPv4
   gameServerAddress.sin_addr.s_addr =
     ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
   gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
