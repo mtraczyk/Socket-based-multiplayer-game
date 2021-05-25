@@ -28,6 +28,8 @@
 #define DATA_ARR_SIZE MAX_NUM_OF_PLAYERS + 2
 #define MAX_DATAGRAM_SIZE 550 // datagram can be long up to 550
 #define DIS_TIME_SEC 2 // disconnection time in seconds
+#define NANO_SEC 1000000000 // one nanosecond
+#define DIS_TIME_NANO 2 * NANO_SEC // disconnection time in nanoseconds
 #define BUFFER_SIZE 1024
 #define CLIENT_DATAGRAM_MIN_SIZE 13 // session_id + turn_direction + next_expected_event_no = 13
 #define CLIENT_DATAGRAM_MAX_SIZE 33 // session_id + turn_direction + next_expected_event_no + player_name = 33
