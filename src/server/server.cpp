@@ -58,6 +58,7 @@
 #define RIGHT_ARR 2
 
 char buffer[BUFFER_SIZE];
+char messageAsACArray[BUFFER_SIZE];
 
 struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
@@ -298,14 +299,16 @@ namespace {
   }
 
   void sendDatagram(std::string const &datagram, int sock) {
-    const char *message = datagram.c_str();
+    for (uint32_t i = 0; i < datagram.size(); i++) {
+      messageAsACArray[i] = datagram[i];
+    }
 
     int sendFlags = 0;
     sndaLen = (socklen_t) sizeof(auxClientAddress);
     /* Ignore errors, we don't want the server to go down.
      * sock is non blocking.
      */
-    sendto(sock, message, sizeof(message), sendFlags, (struct sockaddr *) &auxClientAddress, sndaLen);
+    sendto(sock, messageAsACArray, datagram.size(), sendFlags, (struct sockaddr *) &auxClientAddress, sndaLen);
   }
 
   void sendDatagrams(uint32_t nextExpectedEventNo, int sock) {
