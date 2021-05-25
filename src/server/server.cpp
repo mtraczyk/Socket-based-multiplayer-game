@@ -21,7 +21,7 @@
 #include "../shared_functionalities/parsing_functionalities.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known
-#define MIN_NUM_OF_PLAYERS_TO_START_A_GAME 1 // minimum number of players to start a game
+#define MIN_NUM_OF_PLAYERS_TO_START_A_GAME 2 // minimum number of players to start a game
 
 /* Data arrays are of a size which equals to MAX_NUM_OF_PLAYERS + 2.
  * One additional is needed for the server's socket, and one more for a turn timer.
