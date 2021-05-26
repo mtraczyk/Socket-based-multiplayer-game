@@ -63,6 +63,6 @@ clean:
 	rm screen-worms-server
 	rm screen-worms-client
 
--include $(DEPS)
+-include $(DEPS_SERVER) $(DEPS_CLIENT)
 
 MKDIR_P = mkdir -p
