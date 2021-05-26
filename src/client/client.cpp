@@ -183,8 +183,6 @@ namespace {
         syserr("client's recv");
       }
       uint32_t auxGameId = readNumberFromBuffer(0, 3);
-
-
     }
   }
 
