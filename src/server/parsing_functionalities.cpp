@@ -79,5 +79,9 @@ int setProgramParameters(int argc, char *const argv[], uint16_t *portNum, int64_
     }
   }
 
+  if (argc - optind != 0) {
+    return ERROR;
+  }
+
   return OK;
 }
