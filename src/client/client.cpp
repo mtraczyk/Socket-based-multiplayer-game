@@ -166,7 +166,11 @@ namespace {
     if (checkPollStatus(1)) {
       int rcvFlags = 0;
       int rcvLen = recv(udpSocket, buffer, BUFFER_SIZE, rcvFlags);
-      printf("%s\n", buffer);
+      int aux = 0;
+
+      for (int i = 0; i < 4; i++) {
+        aux += ((uint32_t) buffer[i] << (4 * 8 - (i + 1) * 8));
+      }
     }
   }
 
