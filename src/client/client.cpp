@@ -21,6 +21,8 @@
 #define RIGHT 1
 #define LEFT 2
 
+constexpr static uint32_t numberOfBitsInByte = 8;
+
 struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 struct itimerspec newValue;
@@ -162,15 +164,27 @@ namespace {
     }
   }
 
+  inline uint32_t readNumberFromBuffer(uint32_t leftIndex, uint32_t rightIndex) {
+    uint32_t aux = 0;
+
+    for (uint32_t i = leftIndex; i < rightIndex; i++) {
+      aux += ((uint32_t) buffer[i]
+        << ((rightIndex - leftIndex + 1) * numberOfBitsInByte - (i + 1) * numberOfBitsInByte));
+    }
+
+    return aux;
+  }
+
   void checkMessageFromGameServer(int udpSocket) {
     if (checkPollStatus(1)) {
       int rcvFlags = 0;
       int rcvLen = recv(udpSocket, buffer, BUFFER_SIZE, rcvFlags);
-      int aux = 0;
-
-      for (int i = 0; i < 4; i++) {
-        aux += ((uint32_t) buffer[i] << (4 * 8 - (i + 1) * 8));
+      if (rcvLen < 0) {
+        syserr("client's recv");
       }
+      uint32_t auxGameId = readNumberFromBuffer(0, 3);
+
+
     }
   }
 
