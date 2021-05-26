@@ -55,6 +55,7 @@ class ServerClient:
         log = PacketStructureLog()
         try:
             pk.decode(data, log)
+            print(pk)
         except Exception as e:
             print("WARN: Got invalid packet: " + data.hex())
             traceback.print_exc()
