@@ -13,43 +13,46 @@ SRCS_CLIENT := $(shell find $(SRC_DIRS_CLIENT) -name *.cpp -or -name *.c)
 OBJS_CLIENT := $(SRCS:%=$(BUILD_DIR_CLIENT)/%.o)
 DEPS_CLIENT := $(OBJS_CLIENT:.o=.d)
 
-INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+INC_DIRS_SERVER := $(shell find $(SRC_DIRS_SERVER) -type d)
+INC_FLAGS_SERVER := $(addprefix -I,$(INC_DIRS_SERVER))
+INC_DIRS_CLIENT := $(shell find $(SRC_DIRS_CLIENT) -type d)
+INC_FLAGS_CLIENT := $(addprefix -I,$(INC_DIRS_CLIENT))
 
 CC = gcc
 CXX = g++
 
-CPPFLAGS = $(INC_FLAGS) -MMD -MP
+CPPFLAGS_SERVER = $(INC_FLAGS_SERVER) -MMD -MP
+CPPFLAGS_CLIENT = $(INC_FLAGS_CLIENT) -MMD -MP
 CFLAGS = -Wall -Wextra -std=c11
 CXX_FLAGS = -Wall -Wextra -std=c++17
 
 LIBS =
 
 $(TARGET_EXEC_SERVER): $(OBJS_SERVER)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS) $(LIBS)
+	$(CXX) $(OBJS_SERVER) -o $@ $(LDFLAGS) $(LIBS)
 
 # c source
 $(BUILD_DIR_SERVER)/%.c.o: %.c
 	$(MKDIR_P) $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS_SERVER) $(CFLAGS) -c $< -o $@
 
 # c++ source
 $(BUILD_DIR_SERVER)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXX_FLAGS) -c $< -o $@ $(LIBS)
+	$(CXX) $(CPPFLAGS_SERVER) $(CXX_FLAGS) -c $< -o $@ $(LIBS)
 
 $(TARGET_EXEC_CLIENT): $(OBJS_CLIENT)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS) $(LIBS)
+	$(CXX) $(OBJS_CLIENT) -o $@ $(LDFLAGS) $(LIBS)
 
 # c source
 $(BUILD_DIR_CLIENT)/%.c.o: %.c
 	$(MKDIR_P) $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS_CLIENT) $(CFLAGS) -c $< -o $@
 
 # c++ source
 $(BUILD_DIR_CLIENT)/%.cpp.o: %.cpp
 	$(MKDIR_P) $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXX_FLAGS) -c $< -o $@ $(LIBS)
+	$(CXX) $(CPPFLAGS_CLIENT) $(CXX_FLAGS) -c $< -o $@ $(LIBS)
 
 
 .PHONY: clean
