@@ -34,10 +34,10 @@ int numFromArg(int64_t *value, const char *arg, int64_t minValue, int64_t maxVal
 
     auxValue *= DECIMAL_BASIS;
     auxValue += c - '0';
+  }
 
-    if (auxValue > maxValue || (negative && -auxValue < minValue) || (!negative && auxValue < minValue)) {
-      return ERROR;
-    }
+  if (auxValue > maxValue || (negative && -auxValue < minValue) || (!negative && auxValue < minValue)) {
+    return ERROR;
   }
 
   auxValue = (negative ? -auxValue : auxValue);
