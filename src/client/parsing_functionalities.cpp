@@ -66,7 +66,7 @@ int setProgramParameters(int argc, char *const argv[], std::string &playerName, 
     }
   }
 
-  if (argc - optind != 0) {
+  if (argc - optind != 1) {
     return ERROR;
   }
 
