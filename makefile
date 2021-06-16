@@ -10,7 +10,7 @@ SRCS_SERVER := $(shell find $(SRC_DIRS_SERVER) -name *.cpp -or -name *.c)
 OBJS_SERVER := $(SRCS_SERVER:%=$(BUILD_DIR_SERVER)/%.o)
 DEPS_SERVER := $(OBJS_SERVER:.o=.d)
 SRCS_CLIENT := $(shell find $(SRC_DIRS_CLIENT) -name *.cpp -or -name *.c)
-OBJS_CLIENT := $(SRCS_SERVER:%=$(BUILD_DIR_CLIENT)/%.o)
+OBJS_CLIENT := $(SRCS_CLIENT:%=$(BUILD_DIR_CLIENT)/%.o)
 DEPS_CLIENT := $(OBJS_CLIENT:.o=.d)
 
 INC_DIRS_SERVER := $(shell find $(SRC_DIRS_SERVER) -type d)
