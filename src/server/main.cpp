@@ -1,4 +1,5 @@
 #include <ctime>
+#include <iostream>
 
 #include "../shared_functionalities/err.h"
 #include "parsing_functionalities.h"
@@ -23,6 +24,8 @@ int main(int argc, char **argv) {
   if (setProgramParameters(argc, argv, &portNum, &seed,
                            &turningSpeed, &roundsPerSecond, &boardWidth, &boardHeight) < 0) {
     // Incorrect program parameters.
+    std::cout << portNum << " " << seed << " " << turningSpeed << " " << roundsPerSecond << " " << boardWidth << " "
+              << boardHeight << std::endl;
     fatal("Incorrect program parameters!\nUsage: ./screen-worms-server [-p n] [-s n] [-t n] [-v n] [-w n] [-h n]");
   }
 
