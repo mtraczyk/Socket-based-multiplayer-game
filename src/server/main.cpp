@@ -19,11 +19,14 @@ int main(int argc, char **argv) {
   uint16_t boardWidth = DEFAULT_WIDTH; // width in pixels
   uint16_t boardHeight = DEFAULT_HEIGHT; // height in pixels
 
+  // Set program parameters and check their values.
   if (setProgramParameters(argc, argv, &portNum, &seed,
                            &turningSpeed, &roundsPerSecond, &boardWidth, &boardHeight) < 0) {
+    // Incorrect program parameters.
     fatal("Incorrect program parameters!\nUsage: ./screen-worms-server [-p n] [-s n] [-t n] [-v n] [-w n] [-h n]");
   }
 
+  // Start server.
   server(portNum, seed, turningSpeed, roundsPerSecond, boardWidth, boardHeight);
 
   return 0;
