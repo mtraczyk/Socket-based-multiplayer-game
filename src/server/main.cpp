@@ -24,7 +24,8 @@ int main(int argc, char **argv) {
   if (setProgramParameters(argc, argv, &portNum, &seed,
                            &turningSpeed, &roundsPerSecond, &boardWidth, &boardHeight) < 0) {
     // Incorrect program parameters.
-    std::cout << portNum << " " << seed << " " << turningSpeed << " " << roundsPerSecond << " " << boardWidth << " "
+    std::cout << "port num: " << portNum << " seed: " << seed << " turning speed: " << turningSpeed
+              << " rounds per second: " << roundsPerSecond << " board width: " << boardWidth << " board height: "
               << boardHeight << std::endl;
     fatal("Incorrect program parameters!\nUsage: ./screen-worms-server [-p n] [-s n] [-t n] [-v n] [-w n] [-h n]");
   }
