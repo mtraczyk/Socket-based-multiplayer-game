@@ -15,12 +15,10 @@
 #include <csignal>
 #include <fcntl.h>
 #include <cstring>
-#include <iostream>
 
 #include "server.h"
 #include "../shared_functionalities/err.h"
 #include "../shared_functionalities/event.h"
-#include "parsing_functionalities.h"
 #include "../shared_functionalities/parsing_functionalities.h"
 
 #define MAX_NUM_OF_PLAYERS 25 // maximum number of players is known
@@ -305,6 +303,8 @@ namespace {
       messageAsACArray[i] = datagram[i];
     }
 
+    std::cout << messageAsACArray << std::endl;
+
     int sendFlags = 0;
     sndaLen = (socklen_t) sizeof(auxClientAddress);
     /* Ignore errors, we don't want the server to go down.
@@ -312,6 +312,7 @@ namespace {
      */
     int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, (struct sockaddr *) &auxClientAddress,
                      sndaLen);
+    std::cout << len << std::endl;
     if (len < 0) {
       syserr("send message to a client");
     }
@@ -385,7 +386,7 @@ namespace {
       namesUsed().insert(auxPlayerName);
     }
 
-    std::cout << "new player: " << playerName[index] << std::endl;
+    std::cout << "new player: " << index << " " << playerName[index] << std::endl;
 
     if (gamePlayed) {
       // player is a spectator in the current game, send him all of the datagrams connected to the current match
@@ -475,7 +476,7 @@ namespace {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (lastActivity[i] != 0) {
         auxClientAddress = clientAddress[i];
-        sendDatagrams(events().size(), sock);
+        sendDatagrams(events().size() - 1, sock);
       }
     }
   }
