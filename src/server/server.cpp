@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/timerfd.h>
 #include <poll.h>
@@ -13,6 +14,7 @@
 #include <cmath>
 #include <csignal>
 #include <fcntl.h>
+#include <cstring>
 
 #include "server.h"
 #include "../shared_functionalities/err.h"
@@ -542,7 +544,9 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
-  getaddrinfo(NULL, std::to_string(portNum), &hints, &servInfo);
+  if (getaddrinfo(NULL, std::to_string(portNum).c_str(), &hints, &servInfo) != 0) {
+      syserr("getaddrinfo");
+  }
 
   sock = socket(servInfo->ai_family, servInfo->ai_socktype, servInfo->ai_protocol); // UDP nonblock socket
 

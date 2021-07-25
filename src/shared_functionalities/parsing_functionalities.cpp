@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <iostream>
 #include "parsing_functionalities.h"
 
 #define OK 0
@@ -14,6 +15,10 @@ int numFromArg(int64_t *value, const char *arg, int64_t minValue, int64_t maxVal
   int64_t auxValue = 0;
   const char *s = arg;
   bool negative = false;
+
+  while (isspace(*s)) {
+      s++;
+  }
 
   // Check whether it is a negative number.
   if (*s == '-') {
