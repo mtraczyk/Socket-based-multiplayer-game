@@ -493,6 +493,8 @@ namespace {
 
   void newGame(time_t nanoSecPeriod, uint32_t boardWidth, uint32_t boardHeight, int sock) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
+        std::cout << "new game" << std::endl;
+
       for (auto u : events()) {
         delete u;
       }
@@ -505,6 +507,7 @@ namespace {
       updateCurrentlyPlayingPlayers(players);
 
       Event *aux = new NewGame(0, NEW_GAME, boardWidth, boardHeight, players);
+      std::cout << "before setting the timer" << std::endl;
       setRoundTimer(nanoSecPeriod);
       events().push_back(aux);
       sendEvent(sock);
