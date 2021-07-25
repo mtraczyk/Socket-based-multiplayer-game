@@ -460,6 +460,7 @@ namespace {
   inline void addGameOverEvent() {
     Event *aux = new GameOver(events().size(), GAME_OVER);
     events().push_back(aux);
+    gamePlayed = false;
     disarmATimer(DATA_ARR_SIZE - 1);
   }
 
@@ -493,7 +494,8 @@ namespace {
 
   void newGame(time_t nanoSecPeriod, uint32_t boardWidth, uint32_t boardHeight, int sock) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
-        std::cout << "new game" << std::endl;
+      std::cout << "new game" << std::endl;
+      gamePlayed = true;
 
       for (auto u : events()) {
         delete u;
