@@ -15,6 +15,7 @@
 #include <csignal>
 #include <fcntl.h>
 #include <cstring>
+#include <iostream>
 
 #include "server.h"
 #include "../shared_functionalities/err.h"
@@ -269,8 +270,8 @@ namespace {
       }
 
       *auxTurnDirection = (uint8_t) buffer[8]; // eighth byte of a datagram sets out turn direction
-      if (*auxTurnDirection > 1) {
-        return false;
+      if (*auxTurnDirection > 2) {
+          return false;
       }
 
       bytesNumber = 4; // uint32_t has four bytes
@@ -288,6 +289,12 @@ namespace {
 
         auxPlayerName += buffer[i];
       }
+
+      std::cout << "datagram: " << auxPlayerName << " turn direction: "
+      << (int)(*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
+    } else {
+        std::cout << "incorrect datagram" << std::endl;
+        return false;
     }
 
     return true;
@@ -378,6 +385,8 @@ namespace {
       namesUsed().insert(auxPlayerName);
     }
 
+    std::cout << "new player: " << playerName[index] << std::endl;
+
     if (gamePlayed) {
       // player is a spectator in the current game, send him all of the datagrams connected to the current match
       sendDatagrams(0, sock);
@@ -404,7 +413,7 @@ namespace {
     uint32_t nextExpectedEventNo = 0;
     std::string auxPlayerName;
 
-    if (isDatagramCorrect(len, &auxSessionId, &auxTurnDirection, &nextExpectedEventNo, auxPlayerName)) {
+    if (len > 0 && isDatagramCorrect(len, &auxSessionId, &auxTurnDirection, &nextExpectedEventNo, auxPlayerName)) {
       // datagram is correct but still might be ignored
       auxSockInfo = (struct sockaddr_in6) auxClientAddress;
       std::pair<int, int> clientConnected = isClientConnected();
