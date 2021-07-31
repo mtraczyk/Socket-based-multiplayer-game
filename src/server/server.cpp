@@ -421,20 +421,15 @@ namespace {
     rcvaLen = sizeof(clientAddress);
     flags = 0; // we do net request anything special
 
-    for (char &i : buffer) { // clean buffer
-      if (i != '\0') {
-        i = '\0';
-      } else {
-        break;
-      }
-    }
+    memset(buffer, 0, BUFFER_SIZE);
 
+    auxClientAddress = new sockaddr;
     memset(&auxClientAddress, 0, sizeof(struct sockaddr));
     len = recvfrom(sock, buffer, sizeof(buffer), flags, &auxClientAddress, &rcvaLen);
     std::string ip;
     uint16_t port;
     getIPAndPort(ip, &port, &clientAddress[1]);
-    std::cout << "new player: " << ip << " " << port << std::endl;
+    std::cout << "test checkDatagram " << ip << " " << port << std::endl;
 
 
     // variables to store client's data
