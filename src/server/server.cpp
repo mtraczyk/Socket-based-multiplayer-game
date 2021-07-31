@@ -424,11 +424,11 @@ namespace {
     std::string ip;
     uint16_t port;
 
+    getIPAndPort(ip, &port, &clientAddress[1]);
+    std::cout << "checkDatagram1: " << ip << " " << port << std::endl;
     memset(buffer, 0, BUFFER_SIZE);
     auxClientAddress = new sockaddr;
     memset(auxClientAddress, 0, sizeof(struct sockaddr));
-    getIPAndPort(ip, &port, &clientAddress[1]);
-    std::cout << "checkDatagram1: " << ip << " " << port << std::endl;
     len = recvfrom(sock, buffer, sizeof(buffer), flags, auxClientAddress, &rcvaLen);
     getIPAndPort(ip, &port, &clientAddress[1]);
     std::cout << "checkDatagram2: " << ip << " " << port << std::endl;
