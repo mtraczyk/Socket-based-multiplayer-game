@@ -429,6 +429,11 @@ namespace {
 
     memset(&auxClientAddress, 0, sizeof(struct sockaddr));
     len = recvfrom(sock, buffer, sizeof(buffer), flags, &auxClientAddress, &rcvaLen);
+    std::string ip;
+    uint16_t port;
+    getIPAndPort(ip, &port, &clientAddress[1]);
+    std::cout << "new player: " << ip << " " << port << std::endl;
+
 
     // variables to store client's data
     uint64_t auxSessionId = 0;
