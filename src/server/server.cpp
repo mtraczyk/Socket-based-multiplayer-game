@@ -380,15 +380,6 @@ namespace {
     return ERROR;
   }
 
-  inline void setNewPlayerAddress(int index) {
-    clientAddress[index].sa_family = auxClientAddress.sa_family;
-
-    int length = 14; // length of sa_data field of sockaddr
-    for (int i = 0; i < length; i++) {
-      clientAddress[index].sa_data[i] = auxClientAddress.sa_data[i];
-    }
-  }
-
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
     // find free index in the data array
     int index = findFreeIndex();
@@ -404,7 +395,7 @@ namespace {
     sessionId[index] = auxSessionId;
     turnDirection[index] = auxTurnDirection;
     playerName[index] = auxPlayerName;
-    setNewPlayerAddress(index);
+    memcpy(&clientAddress[index], &auxClientAddress, sizeof(struct sockaddr));
     activePlayersNum++;
     if (!auxPlayerName.empty()) {
       namesUsed().insert(auxPlayerName);
