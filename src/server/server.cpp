@@ -395,6 +395,7 @@ namespace {
     sessionId[index] = auxSessionId;
     turnDirection[index] = auxTurnDirection;
     playerName[index] = auxPlayerName;
+    memset(&clientAddress[index], 0, sizeof(struct sockaddr));
     memcpy(&clientAddress[index], &auxClientAddress, sizeof(struct sockaddr));
     activePlayersNum++;
     if (!auxPlayerName.empty()) {
@@ -425,6 +426,8 @@ namespace {
         break;
       }
     }
+
+    memset(&auxClientAddress, 0, sizeof(struct sockaddr));
     len = recvfrom(sock, buffer, sizeof(buffer), flags, &auxClientAddress, &rcvaLen);
 
     // variables to store client's data
