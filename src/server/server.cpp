@@ -461,8 +461,6 @@ namespace {
       }
     }
 
-    delete auxClientAddress;
-
     return counter;
   }
 
