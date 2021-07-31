@@ -382,7 +382,6 @@ namespace {
 
   inline void setNewPlayerAddress(int index) {
     clientAddress[index].sa_family = auxClientAddress.sa_family;
-    clientAddress[index].sa_len = auxClientAddress.sa_len;
 
     int length = 14; // length of sa_data field of sockaddr
     for (int i = 0; i < length; i++) {
@@ -412,6 +411,10 @@ namespace {
     }
 
     std::cout << "new player: " << index << " " << playerName[index] << std::endl;
+    std::string ip;
+    uint16_t port;
+    getIPAndPort(ip, &port, &clientAddress[index]);
+    std::cout << "new player: " << ip << " " << port << std::endl;
 
     if (gamePlayed) {
       // player is a spectator in the current game, send him all of the datagrams connected to the current match
