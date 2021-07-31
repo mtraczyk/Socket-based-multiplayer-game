@@ -229,7 +229,6 @@ namespace {
 
     if (auxIP != nullptr) {
       ip = std::string(auxIP);
-      std::cout << ip << " " << *port << std::endl;
     }
 
     delete[] auxIP;
