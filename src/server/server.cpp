@@ -85,7 +85,7 @@ u_short playersInTheGame = 0; // number of people in a particular game
 std::string playingPlayerName[DATA_ARR_SIZE]; // the names are store sorted
 
 // socket connection data
-struct sockaddr auxClientAddress;
+struct sockaddr* auxClientAddress;
 socklen_t rcvaLen, sndaLen;
 int flags, len;
 
@@ -219,12 +219,12 @@ namespace {
     char *auxIP = nullptr;
     if (pAddress->sa_family == AF_INET) {
       auxIP = new char[INET_ADDRSTRLEN];
-      auxIP = const_cast<char *>(inet_ntop(AF_INET, &auxClientAddress, auxIP, INET_ADDRSTRLEN));
-      *port = ((struct sockaddr_in *) &auxClientAddress)->sin_port;
+      auxIP = const_cast<char *>(inet_ntop(AF_INET, auxClientAddress, auxIP, INET_ADDRSTRLEN));
+      *port = ((struct sockaddr_in *) auxClientAddress)->sin_port;
     } else if (pAddress->sa_family == AF_INET6) {
       auxIP = new char[INET6_ADDRSTRLEN];
-      auxIP = const_cast<char *>(inet_ntop(AF_INET6, &auxClientAddress, auxIP, INET6_ADDRSTRLEN));
-      *port = ((struct sockaddr_in6 *) &auxClientAddress)->sin6_port;
+      auxIP = const_cast<char *>(inet_ntop(AF_INET6, auxClientAddress, auxIP, INET6_ADDRSTRLEN));
+      *port = ((struct sockaddr_in6 *) auxClientAddress)->sin6_port;
     }
 
     if (auxIP != nullptr) {
@@ -246,7 +246,7 @@ namespace {
     in_port_t auxPort;
 
     // get ip and port for the new client
-    getIPAndPort(auxIP, &auxPort, &auxClientAddress);
+    getIPAndPort(auxIP, &auxPort, auxClientAddress);
 
     if (!auxIP.empty()) {
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
@@ -324,11 +324,11 @@ namespace {
     std::cout << messageAsACArray << std::endl;
 
     int sendFlags = 0;
-    sndaLen = (socklen_t) sizeof(auxClientAddress);
+    sndaLen = (socklen_t) sizeof(sockaddr);
     /* Ignore errors, we don't want the server to go down.
      * sock is non blocking.
      */
-    int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, &auxClientAddress, sndaLen);
+    int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, auxClientAddress, sndaLen);
     std::cout << len << std::endl;
     if (len < 0) {
       syserr("send message to a client");
@@ -398,7 +398,7 @@ namespace {
     turnDirection[index] = auxTurnDirection;
     playerName[index] = auxPlayerName;
     memset(&clientAddress[index], 0, sizeof(struct sockaddr));
-    memcpy(&clientAddress[index], &auxClientAddress, sizeof(struct sockaddr));
+    memcpy(&clientAddress[index], auxClientAddress, sizeof(struct sockaddr));
     activePlayersNum++;
     if (!auxPlayerName.empty()) {
       namesUsed().insert(auxPlayerName);
@@ -421,21 +421,14 @@ namespace {
     rcvaLen = sizeof(clientAddress);
     flags = 0; // we do net request anything special
 
-    for (char &i : buffer) { // clean buffer
-      if (i != '\0') {
-        i = '\0';
-      } else {
-        break;
-      }
-    }
-
-    memset(&auxClientAddress, 0, sizeof(struct sockaddr));
-    len = recvfrom(sock, buffer, sizeof(buffer), flags, &auxClientAddress, &rcvaLen);
+    memset(buffer, 0, BUFFER_SIZE);
+    auxClientAddress = new sockaddr;
+    memset(auxClientAddress, 0, sizeof(struct sockaddr));
+    len = recvfrom(sock, buffer, sizeof(buffer), flags, auxClientAddress, &rcvaLen);
     std::string ip;
     uint16_t port;
     getIPAndPort(ip, &port, &clientAddress[1]);
     std::cout << "new player: " << ip << " " << port << std::endl;
-
 
     // variables to store client's data
     uint64_t auxSessionId = 0;
@@ -464,6 +457,8 @@ namespace {
         counter++;
       }
     }
+
+    delete auxClientAddress;
 
     return counter;
   }
@@ -503,7 +498,7 @@ namespace {
   void sendEvent(int sock) {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (lastActivity[i] != 0) {
-        auxClientAddress = clientAddress[i];
+        *auxClientAddress = clientAddress[i];
         sendDatagrams(events().size() - 1, sock);
       }
     }
