@@ -227,8 +227,10 @@ namespace {
       *port = ((struct sockaddr_in6 *) &auxClientAddress)->sin6_port;
     }
 
-    ip = std::string(auxIP);
-    std::cout << ip << " " << *port << std::endl;
+    if (auxIP != nullptr) {
+      ip = std::string(auxIP);
+      std::cout << ip << " " << *port << std::endl;
+    }
 
     delete[] auxIP;
   }
