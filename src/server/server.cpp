@@ -228,6 +228,8 @@ namespace {
     }
 
     ip = std::string(auxIP);
+    std::cout << ip << " " << *port << std::endl;
+
     delete[] auxIP;
   }
 
@@ -248,6 +250,7 @@ namespace {
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
         if (lastActivity[i] != 0) {
           // check a connected client
+          std::cout << i << " connected client";
           getIPAndPort(clientIP, &clientPort, &clientAddress[i]);
           if (clientIP.empty()) {
             codeResult = ERROR;
@@ -264,6 +267,8 @@ namespace {
     } else {
       codeResult = ERROR;
     }
+
+    std::cout << "returning code " << codeResult << std::endl;
 
     return {codeResult, clientNumber};
   }
