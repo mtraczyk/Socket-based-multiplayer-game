@@ -85,7 +85,7 @@ u_short playersInTheGame = 0; // number of people in a particular game
 std::string playingPlayerName[DATA_ARR_SIZE]; // the names are store sorted
 
 // socket connection data
-struct sockaddr* auxClientAddress;
+struct sockaddr *auxClientAddress;
 socklen_t rcvaLen, sndaLen;
 int flags, len;
 
@@ -382,6 +382,15 @@ namespace {
     return ERROR;
   }
 
+  void setClientAddress(int index) {
+    memset(&clientAddress[index], 0, sizeof(struct sockaddr));
+    clientAddress[index].sa_family = auxClientAddress->sa_family;
+
+    for (int i = 0; i < 14; i++) {
+      clientAddress[index].sa_data[i] = auxClientAddress->sa_data[i];
+    }
+  }
+
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
     // find free index in the data array
     int index = findFreeIndex();
@@ -397,8 +406,7 @@ namespace {
     sessionId[index] = auxSessionId;
     turnDirection[index] = auxTurnDirection;
     playerName[index] = auxPlayerName;
-    memset(&clientAddress[index], 0, sizeof(struct sockaddr));
-    memcpy(&clientAddress[index], auxClientAddress, sizeof(struct sockaddr));
+    setClientAddress(index);
     activePlayersNum++;
     if (!auxPlayerName.empty()) {
       namesUsed().insert(auxPlayerName);
