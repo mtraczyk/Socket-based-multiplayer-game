@@ -29,10 +29,9 @@
  */
 #define DATA_ARR_SIZE MAX_NUM_OF_PLAYERS + 2
 #define MAX_DATAGRAM_SIZE 550 // datagram can be long up to 550
-#define DIS_TIME_SEC 2 // disconnection time in seconds
 #define NANO_SEC 1000000000 // one nanosecond
 #define DIS_TIME_NANO 2 * NANO_SEC // disconnection time in nanoseconds
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 4096
 #define CLIENT_DATAGRAM_MIN_SIZE 13 // session_id + turn_direction + next_expected_event_no = 13
 #define CLIENT_DATAGRAM_MAX_SIZE 33 // session_id + turn_direction + next_expected_event_no + player_name = 33
 #define BITS_IN_A_BYTE_NUM 8 // there are eight bits in one byte
@@ -69,7 +68,7 @@ struct itimerspec newValue[DATA_ARR_SIZE];
 struct timespec now; // auxiliary struct to store current time
 
 // active players' info.
-struct sockaddr_in6 clientAddress[DATA_ARR_SIZE];
+struct sockaddr clientAddress[DATA_ARR_SIZE];
 time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
 uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
 uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
@@ -86,10 +85,9 @@ u_short playersInTheGame = 0; // number of people in a particular game
 std::string playingPlayerName[DATA_ARR_SIZE]; // the names are store sorted
 
 // socket connection data
-struct sockaddr_in6 auxClientAddress;
-struct sockaddr_in6 auxSockInfo;
-socklen_t clientAddressLen, rcvaLen, sndaLen;
-int flags, sndFlags, len;
+struct sockaddr auxClientAddress;
+socklen_t rcvaLen, sndaLen;
+int flags, len;
 
 int64_t randomNumber;
 
@@ -203,7 +201,7 @@ namespace {
       if (pfds[i].revents != 0) {
         if (pfds[i].revents & POLLIN) {
           getCurrentTime();
-          if (now.tv_nsec - lastActivity[i] > DIS_TIME_NANO) {
+          if (lastActivity[i] != 0 && now.tv_nsec - lastActivity[i] > DIS_TIME_NANO) {
             // disconnected
             activePlayersNum--; // update number of players
             lastActivity[i] = 0;
@@ -217,30 +215,46 @@ namespace {
     }
   }
 
-  /* First number in the pair is SUCCESS if a client is connected,
+  void getIPAndPort(std::string &ip, in_port_t *port, sockaddr *pAddress) {
+    char *auxIP = nullptr;
+    if (pAddress->sa_family == AF_INET) {
+      auxIP = new char[INET_ADDRSTRLEN];
+      auxIP = const_cast<char *>(inet_ntop(AF_INET, &auxClientAddress, auxIP, INET_ADDRSTRLEN));
+      *port = ((struct sockaddr_in *) &auxClientAddress)->sin_port;
+    } else if (pAddress->sa_family == AF_INET6) {
+      auxIP = new char[INET6_ADDRSTRLEN];
+      auxIP = const_cast<char *>(inet_ntop(AF_INET6, &auxClientAddress, auxIP, INET6_ADDRSTRLEN));
+      *port = ((struct sockaddr_in6 *) &auxClientAddress)->sin6_port;
+    }
+
+    ip = std::string(auxIP);
+    delete[] auxIP;
+  }
+
+/* First number in the pair is SUCCESS if a client is connected,
    * ERROR when something failed, and 0 when a client isn't connected. If first number is SUCCESS, the second
    * one indicates client's index in data array, it equals -1 otherwise.
    */
   std::pair<int, int> isClientConnected() {
     int codeResult = 0, clientNumber = -1;
-    char *clientIP = new char[INET6_ADDRSTRLEN];
-    char *auxIP = new char[INET6_ADDRSTRLEN];
+    std::string auxIP, clientIP;
     in_port_t clientPort;
-    in_port_t auxPort = auxClientAddress.sin6_port;
+    in_port_t auxPort;
 
-    auxIP = const_cast<char *>(inet_ntop(AF_INET6, &auxClientAddress, auxIP, INET6_ADDRSTRLEN));
-    if (auxIP != nullptr) {
+    // get ip and port for the new client
+    getIPAndPort(auxIP, &auxPort, &auxClientAddress);
+
+    if (!auxIP.empty()) {
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
         if (lastActivity[i] != 0) {
           // check a connected client
-          clientIP = const_cast<char *>(inet_ntop(AF_INET6, &clientAddress[i], clientIP, INET6_ADDRSTRLEN));
-          if (clientIP == nullptr) {
+          getIPAndPort(clientIP, &clientPort, &clientAddress[i]);
+          if (clientIP.empty()) {
             codeResult = ERROR;
             break;
           }
 
-          clientPort = clientAddress[i].sin6_port;
-          if (std::string(auxIP) == std::string(clientIP) && auxPort == clientPort) {
+          if (auxIP == clientIP && auxPort == clientPort) {
             codeResult = SUCCESS;
             clientNumber = i;
             break;
@@ -250,9 +264,6 @@ namespace {
     } else {
       codeResult = ERROR;
     }
-
-    delete[] clientIP;
-    delete[] auxIP;
 
     return {codeResult, clientNumber};
   }
@@ -269,7 +280,7 @@ namespace {
 
       *auxTurnDirection = (uint8_t) buffer[8]; // eighth byte of a datagram sets out turn direction
       if (*auxTurnDirection > 2) {
-          return false;
+        return false;
       }
 
       bytesNumber = 4; // uint32_t has four bytes
@@ -289,10 +300,10 @@ namespace {
       }
 
       std::cout << "datagram: " << auxPlayerName << " turn direction: "
-      << (int)(*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
+                << (int) (*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
     } else {
-        std::cout << "incorrect datagram" << std::endl;
-        return false;
+      std::cout << "incorrect datagram" << std::endl;
+      return false;
     }
 
     return true;
@@ -310,8 +321,7 @@ namespace {
     /* Ignore errors, we don't want the server to go down.
      * sock is non blocking.
      */
-    int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, (struct sockaddr *) &auxClientAddress,
-                     sndaLen);
+    int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, &auxClientAddress, sndaLen);
     std::cout << len << std::endl;
     if (len < 0) {
       syserr("send message to a client");
@@ -406,7 +416,7 @@ namespace {
         break;
       }
     }
-    len = recvfrom(sock, buffer, sizeof(buffer), flags, (struct sockaddr *) &auxClientAddress, &rcvaLen);
+    len = recvfrom(sock, buffer, sizeof(buffer), flags, &auxClientAddress, &rcvaLen);
 
     // variables to store client's data
     uint64_t auxSessionId = 0;
@@ -416,7 +426,6 @@ namespace {
 
     if (len > 0 && isDatagramCorrect(len, &auxSessionId, &auxTurnDirection, &nextExpectedEventNo, auxPlayerName)) {
       // datagram is correct but still might be ignored
-      auxSockInfo = (struct sockaddr_in6) auxClientAddress;
       std::pair<int, int> clientConnected = isClientConnected();
 
       if (clientConnected.first == SUCCESS && auxSessionId <= sessionId[clientConnected.second]) {
@@ -559,23 +568,24 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
-  if (getaddrinfo(NULL, std::to_string(portNum).c_str(), &hints, &servInfo) != 0) {
-      syserr("getaddrinfo");
+  if (getaddrinfo(nullptr, std::to_string(portNum).c_str(), &hints, &servInfo) != 0) {
+    syserr("server getaddrinfo error");
   }
 
-  sock = socket(servInfo->ai_family, servInfo->ai_socktype, servInfo->ai_protocol); // UDP nonblock socket
+  sock = socket(servInfo->ai_family, servInfo->ai_socktype, servInfo->ai_protocol); // UDP socket
 
   if (sock < 0) {
-    syserr("socket");
+    syserr("server socket creation");
   }
 
   // bind the socket to a concrete address
   if (bind(sock, servInfo->ai_addr, servInfo->ai_addrlen) < 0) {
-    syserr("bind, address taken.");
+    syserr("server socket bind, address taken.");
   }
 
+  // socket is non-blocking
   if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
-    syserr("fctl failed");
+    syserr("server fctl failed");
   }
 
   signal(SIGPIPE, SIG_IGN); // Ignoring SIGPIPE.
