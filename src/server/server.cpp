@@ -382,7 +382,6 @@ namespace {
 
   inline void setNewPlayerAddress(int index) {
     clientAddress[index].sa_family = auxClientAddress.sa_family;
-    clientAddress[index].sa_len = auxClientAddress.sa_len;
 
     int length = 14; // length of sa_data field of sockaddr
     for (int i = 0; i < length; i++) {
