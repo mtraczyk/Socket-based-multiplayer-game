@@ -431,7 +431,7 @@ namespace {
       if (clientConnected.first == SUCCESS && auxSessionId <= sessionId[clientConnected.second]) {
         newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
                                         nextExpectedEventNo, auxPlayerName, clientConnected.second, sock);
-      } else if (MAX_NUM_OF_PLAYERS > activePlayersNum) {
+      } else if (!clientConnected.first && MAX_NUM_OF_PLAYERS > activePlayersNum) {
         processNewPlayer(auxSessionId, auxTurnDirection, auxPlayerName, sock);
       }
     }
