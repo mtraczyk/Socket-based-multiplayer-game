@@ -156,16 +156,17 @@ namespace {
         int64_t auxY = std::round(playerWormY[i]);
 
         if (checkBorders(auxX, auxY, boardWidth, boardHeight)) {
-          roundedPlayerWormX[i] = auxX;
-          roundedPlayerWormY[i] = auxY;
           if (!(roundedPlayerWormX[i] == auxX && roundedPlayerWormY[i] == auxY)) {
+            roundedPlayerWormX[i] = auxX;
+            roundedPlayerWormY[i] = auxY;
+
             if (squaresUsed().find({auxX, auxY}) != squaresUsed().end()) {
               // player eliminated
               addPlayerEliminatedEvent(i);
               sendEvent(sock);
             } else {
               // eat pixel
-              std::cout << "JEM PIXEL: " << i << std::endl;
+              squaresUsed().insert({roundedPlayerWormX[i], roundedPlayerWormY[i]});
               addPixelEvent(i, roundedPlayerWormX[i], roundedPlayerWormY[i]);
               sendEvent(sock);
             }
