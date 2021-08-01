@@ -530,8 +530,8 @@ namespace {
 
         if (takesPartInTheCurrentGame[i]) {
           playersInTheGame++; // one more player
-          playerWormX[i] = (deterministicRand() % boardWidth) - 0.5;
-          playerWormY[i] = (deterministicRand() % boardHeight) - 0.5;
+          playerWormX[i] = (deterministicRand() % boardWidth);
+          playerWormY[i] = (deterministicRand() % boardHeight);
           roundedPlayerWormX[i] = std::round(playerWormX[i]);
           roundedPlayerWormY[i] = std::round(playerWormY[i]);
           playerDirection[i] = deterministicRand() % FULL_CIRCLE;
