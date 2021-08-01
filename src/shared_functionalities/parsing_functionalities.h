@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <arpa/inet.h>
+#include <iostream>
 
 using byte = uint8_t;
 
@@ -17,8 +18,16 @@ std::vector<byte> toByte(T input) {
 
 template<typename T>
 void addNumber(std::string &datagram, T number) {
+  std::cout << "addNumber debug info" << std::endl;
+  std::cout << number << " " << htons(number) << std::endl;
   number = htons(number);
   auto byteArray = toByte(number);
+
+  for (auto u : byteArray) {
+    std::cout << u << " ";
+  }
+  std::cout << std::endl;
+
   datagram += std::string(byteArray.begin(), byteArray.end());
 }
 

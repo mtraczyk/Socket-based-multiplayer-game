@@ -15,10 +15,11 @@ namespace {
     std::string eventPartLength;
     uint32_t len = eventDatagramPart.size();
 
-    addNumber(eventDatagramPart, crc32(eventDatagramPart.c_str(), sizeof(eventDatagramPart.c_str())));
     addNumber(eventPartLength, len);
+    eventDatagramPart = eventPartLength + eventDatagramPart;
+    addNumber(eventDatagramPart, crc32(eventDatagramPart.c_str(), sizeof(eventDatagramPart.c_str())));
 
-    return eventPartLength + eventDatagramPart;
+    return eventDatagramPart;
   }
 }
 
