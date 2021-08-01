@@ -336,7 +336,6 @@ namespace {
 
   void sendDatagrams(uint32_t nextExpectedEventNo, int sock) {
     uint32_t tmp = htonl(gameId); // convert to big endian
-    std::cout << "game IDDD " << gameId << " " << tmp << std::endl;
     auto byteVector = toByte(tmp);
     std::string gameIdByteArray(byteVector.begin(), byteVector.end());
 

@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <arpa/inet.h>
-#include <iostream>
+#include <type_traits>
 
 using byte = uint8_t;
 
@@ -18,11 +18,11 @@ std::vector<byte> toByte(T input) {
 
 template<typename T>
 void addNumber(std::string &datagram, T number) {
-  std::cout << "addNumber debug info" << std::endl;
-  std::cout << number << " " << htonl(number) << std::endl;
-  number = htonl(number);
-  auto byteArray = toByte(number);
+  if (std::is_same<T, std::uint32_t>::value) {
+    number = htonl(number);
+  }
 
+  auto byteArray = toByte(number);
   datagram += std::string(byteArray.begin(), byteArray.end());
 }
 
