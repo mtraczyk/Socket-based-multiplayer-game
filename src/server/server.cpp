@@ -159,12 +159,12 @@ namespace {
 
             if (squaresUsed().find({auxX, auxY}) != squaresUsed().end()) {
               // player eliminated
-              addPlayerEliminatedEvent(i);
+              addPlayerEliminatedEvent(i - 1);
               sendEvent(sock);
             } else {
               // eat pixel
               squaresUsed().insert({roundedPlayerWormX[i], roundedPlayerWormY[i]});
-              addPixelEvent(i, roundedPlayerWormX[i], roundedPlayerWormY[i]);
+              addPixelEvent(i - 1, roundedPlayerWormX[i], roundedPlayerWormY[i]);
               sendEvent(sock);
             }
           }
@@ -271,8 +271,6 @@ namespace {
       codeResult = ERROR;
     }
 
-    std::cout << "returning code " << codeResult << std::endl;
-
     return {codeResult, clientNumber};
   }
 
@@ -307,8 +305,8 @@ namespace {
         auxPlayerName += buffer[i];
       }
 
-      std::cout << "datagram: " << auxPlayerName << " turn direction: "
-                << (int) (*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
+//      std::cout << "datagram: " << auxPlayerName << " turn direction: "
+//                << (int) (*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
     } else {
       std::cout << "incorrect datagram" << std::endl;
       return false;
