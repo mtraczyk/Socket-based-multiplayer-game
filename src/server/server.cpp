@@ -83,6 +83,8 @@ bool gamePlayed = false; // indicates whether a game is being played
 uint32_t gameId; // every game has a randomly generated id
 u_short playersInTheGame = 0; // number of people in a particular game
 std::string playingPlayerName[DATA_ARR_SIZE]; // the names are store sorted
+int playingPlayerDataIndex[DATA_ARR_SIZE]; // index in connection data tables
+bool isPlayerDead[DATA_ARR_SIZE];
 
 // socket connection data
 struct sockaddr auxClientAddress;
@@ -139,32 +141,34 @@ namespace {
   }
 
   void performNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
-    for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (takesPartInTheCurrentGame[i]) {
-        if (turnDirection[i] == LEFT_ARR) {
-          playerDirection[i] += (double) turningSpeed;
-        } else if (turnDirection[i] == RIGHT_ARR) {
-          playerDirection[i] -= (double) turningSpeed;
+    for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
+      auto index = playingPlayerDataIndex[i];
+
+      if (index != -1 && !isPlayerDead[i] && takesPartInTheCurrentGame[index]) {
+        if (turnDirection[index] == LEFT_ARR) {
+          playerDirection[index] += (double) turningSpeed;
+        } else if (turnDirection[index] == RIGHT_ARR) {
+          playerDirection[index] -= (double) turningSpeed;
         }
 
-        playerWormX[i] += cos(angleToRadian(playerDirection[i]));
-        playerWormY[i] += sin(angleToRadian(playerDirection[i]));
-        int64_t auxX = std::round(playerWormX[i]);
-        int64_t auxY = std::round(playerWormY[i]);
+        playerWormX[index] += cos(angleToRadian(playerDirection[index]));
+        playerWormY[index] += sin(angleToRadian(playerDirection[index]));
+        int64_t auxX = std::floor(playerWormX[index]);
+        int64_t auxY = std::floor(playerWormY[index]);
 
         if (checkBorders(auxX, auxY, boardWidth, boardHeight)) {
-          if (!(roundedPlayerWormX[i] == auxX && roundedPlayerWormY[i] == auxY)) {
-            roundedPlayerWormX[i] = auxX;
-            roundedPlayerWormY[i] = auxY;
+          if (!(roundedPlayerWormX[index] == auxX && roundedPlayerWormY[index] == auxY)) {
+            roundedPlayerWormX[index] = auxX;
+            roundedPlayerWormY[index] = auxY;
 
             if (squaresUsed().find({auxX, auxY}) != squaresUsed().end()) {
               // player eliminated
-              addPlayerEliminatedEvent(i - 1);
+              addPlayerEliminatedEvent(i);
               sendEvent(sock);
             } else {
               // eat pixel
-              squaresUsed().insert({roundedPlayerWormX[i], roundedPlayerWormY[i]});
-              addPixelEvent(i - 1, roundedPlayerWormX[i], roundedPlayerWormY[i]);
+              squaresUsed().insert({roundedPlayerWormX[index], roundedPlayerWormY[index]});
+              addPixelEvent(i, roundedPlayerWormX[index], roundedPlayerWormY[index]);
               sendEvent(sock);
             }
           }
@@ -371,6 +375,7 @@ namespace {
   inline int findFreeIndex() {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (lastActivity[i] == 0) {
+        // It also can't be a bot.
         return i;
       }
     }
@@ -463,6 +468,7 @@ namespace {
     Event *aux = new PlayerEliminated(events().size(), PLAYER_ELIMINATED, playerNum, playingPlayerName[playerNum]);
     events().push_back(aux);
     playersInTheGame--;
+    isPlayerDead[playerNum] = true;
   }
 
   inline void addPixelEvent(uint8_t playerNum, uint16_t x, uint16_t y) {
@@ -478,8 +484,23 @@ namespace {
   }
 
   inline void updateCurrentlyPlayingPlayers(std::vector<std::string> const &players) {
+    for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
+      playingPlayerDataIndex[i] = -1;
+    }
+
     for (uint32_t i = 0; i < players.size(); i++) {
       playingPlayerName[i] = players[i];
+
+      for (int j = 1; j < DATA_ARR_SIZE - 1; j++) {
+        if (playerName[j] == playingPlayerName[i]) {
+          playingPlayerDataIndex[i] = j;
+          break;
+        }
+      }
+    }
+
+    for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
+      isPlayerDead[i] = false;
     }
   }
 
@@ -527,20 +548,24 @@ namespace {
 
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
         takesPartInTheCurrentGame[i] = lastActivity[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
+      }
 
-        if (takesPartInTheCurrentGame[i]) {
+      for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
+        auto index = playingPlayerDataIndex[i];
+
+        if (index != -1 && takesPartInTheCurrentGame[index]) {
           playersInTheGame++; // one more player
-          playerWormX[i] = (deterministicRand() % boardWidth);
-          playerWormY[i] = (deterministicRand() % boardHeight);
-          roundedPlayerWormX[i] = std::round(playerWormX[i]);
-          roundedPlayerWormY[i] = std::round(playerWormY[i]);
-          playerDirection[i] = deterministicRand() % FULL_CIRCLE;
+          playerWormX[index] = (deterministicRand() % boardWidth) + 0.5;
+          playerWormY[index] = (deterministicRand() % boardHeight) + 0.5;
+          roundedPlayerWormX[index] = std::floor(playerWormX[index]);
+          roundedPlayerWormY[index] = std::floor(playerWormY[index]);
+          playerDirection[index] = deterministicRand() % FULL_CIRCLE;
 
-          if (squaresUsed().find({roundedPlayerWormX[i], roundedPlayerWormY[i]}) != squaresUsed().end()) {
-            addPlayerEliminatedEvent(i);
+          if (squaresUsed().find({roundedPlayerWormX[index], roundedPlayerWormY[index]}) != squaresUsed().end()) {
+            addPlayerEliminatedEvent(index);
           } else {
-            squaresUsed().insert({roundedPlayerWormX[i], roundedPlayerWormY[i]});
-            addPixelEvent(i - 1, roundedPlayerWormX[i], roundedPlayerWormY[i]);
+            squaresUsed().insert({roundedPlayerWormX[index], roundedPlayerWormY[index]});
+            addPixelEvent(i, roundedPlayerWormX[index], roundedPlayerWormY[index]);
           }
           sendEvent(sock);
         }
