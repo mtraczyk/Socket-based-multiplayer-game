@@ -19,8 +19,8 @@ std::vector<byte> toByte(T input) {
 template<typename T>
 void addNumber(std::string &datagram, T number) {
   std::cout << "addNumber debug info" << std::endl;
-  std::cout << number << " " << htons(number) << std::endl;
-  number = htons(number);
+  std::cout << number << " " << htonl(number) << std::endl;
+  number = htonl(number);
   auto byteArray = toByte(number);
 
   for (auto u : byteArray) {

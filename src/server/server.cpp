@@ -352,12 +352,6 @@ namespace {
       }
     }
 
-    for (int i = 0; i < datagram.size(); i++) {
-      if (!(datagram[i] >= 0 && datagram[i] <= 127)) {
-        std::cout << "!!" << i << std::endl;
-      }
-    }
-
     uint32_t numberOfBytesInGameId = 4;
     if (datagram.size() != numberOfBytesInGameId) {
       std::cout << datagram << " " << datagram.size() << std::endl;
