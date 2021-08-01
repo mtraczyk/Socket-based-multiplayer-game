@@ -139,8 +139,11 @@ namespace {
   }
 
   void performNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
+    std::cout << "Takes part in the current game: ";
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (takesPartInTheCurrentGame[i]) {
+        std::cout << i << " ";
+
         if (turnDirection[i] == LEFT_ARR) {
           playerDirection[i] += (double) turningSpeed;
         } else if (turnDirection[i] == RIGHT_ARR) {
@@ -169,6 +172,7 @@ namespace {
         }
       }
     }
+    std::cout << std::endl;
   }
 
   inline void getCurrentTime() {
@@ -606,7 +610,6 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
      * If that's the case needed operations are performed.
      */
     if (gamePlayed) {
-      std::cout << "GAME PLAYED !!" << std::endl;
       checkNextTurn(turningSpeed, boardWidth, boardHeight, sock);
     }
     checkDisconnection(); // check for disconnected clients
