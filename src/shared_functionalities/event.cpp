@@ -53,6 +53,7 @@ std::string Pixel::getByteRepresentationServer() const noexcept {
   std::string eventPartLength;
   generateEventInfo(eventDatagramPart, eventNo, eventType);
 
+  addNumber(eventDatagramPart, playerNum);
   addNumber(eventDatagramPart, x);
   addNumber(eventDatagramPart, y);
 
