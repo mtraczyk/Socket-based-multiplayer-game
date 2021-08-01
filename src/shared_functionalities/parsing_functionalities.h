@@ -23,11 +23,6 @@ void addNumber(std::string &datagram, T number) {
   number = htonl(number);
   auto byteArray = toByte(number);
 
-  for (auto u : byteArray) {
-    std::cout << u << " ";
-  }
-  std::cout << std::endl;
-
   datagram += std::string(byteArray.begin(), byteArray.end());
 }
 
