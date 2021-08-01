@@ -165,6 +165,7 @@ namespace {
               sendEvent(sock);
             } else {
               // eat pixel
+              std::cout << "JEM PIXEL: " << i << std::endl;
               addPixelEvent(i, roundedPlayerWormX[i], roundedPlayerWormY[i]);
               sendEvent(sock);
             }
