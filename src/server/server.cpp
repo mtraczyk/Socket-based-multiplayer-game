@@ -511,7 +511,6 @@ namespace {
 
   void newGame(time_t nanoSecPeriod, uint32_t boardWidth, uint32_t boardHeight, int sock) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
-      std::cout << "new game" << std::endl;
       gamePlayed = true;
 
       for (auto u : events()) {
@@ -526,7 +525,6 @@ namespace {
       updateCurrentlyPlayingPlayers(players);
 
       Event *aux = new NewGame(0, NEW_GAME, boardWidth, boardHeight, players);
-      std::cout << "before setting the timer" << std::endl;
       setRoundTimer(nanoSecPeriod);
       events().push_back(aux);
       sendEvent(sock);
@@ -536,8 +534,8 @@ namespace {
 
         if (takesPartInTheCurrentGame[i]) {
           playersInTheGame++; // one more player
-          playerWormX[i] = (deterministicRand() % boardWidth) + 0.5;
-          playerWormY[i] = (deterministicRand() % boardHeight) + 0.5;
+          playerWormX[i] = (deterministicRand() % boardWidth) - 0.5;
+          playerWormY[i] = (deterministicRand() % boardHeight) - 0.5;
           roundedPlayerWormX[i] = std::round(playerWormX[i]);
           roundedPlayerWormY[i] = std::round(playerWormY[i]);
           playerDirection[i] = deterministicRand() % FULL_CIRCLE;
@@ -546,7 +544,7 @@ namespace {
             addPlayerEliminatedEvent(i);
           } else {
             squaresUsed().insert({roundedPlayerWormX[i], roundedPlayerWormY[i]});
-            addPixelEvent(i, roundedPlayerWormX[i], roundedPlayerWormY[i]);
+            addPixelEvent(i - 1, roundedPlayerWormX[i], roundedPlayerWormY[i]);
           }
           sendEvent(sock);
         }
