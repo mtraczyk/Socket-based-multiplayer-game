@@ -5,10 +5,8 @@
 
 namespace {
   void generateEventInfo(std::string &datagram, uint32_t eventNo, uint8_t eventType) {
-    auto byteArray = toByte(eventNo);
-    datagram = std::string(byteArray.begin(), byteArray.end());
-    byteArray = toByte(eventType);
-    datagram += std::string(byteArray.begin(), byteArray.end());
+    addNumber(datagram, eventNo);
+    addNumber(datagram, eventType);
   }
 
   std::string finalDatagram(std::string &eventDatagramPart) {

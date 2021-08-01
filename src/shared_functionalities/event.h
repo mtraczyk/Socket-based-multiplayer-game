@@ -1,11 +1,9 @@
 #ifndef EVENT_H
 #define EVENT_H
 
-
 #include <utility>
 #include <vector>
 #include <string>
-
 
 class Event {
   public:
@@ -73,6 +71,5 @@ class GameOver : public Event {
     std::string getByteRepresentationServer() const noexcept override;
     std::string getByteRepresentationClient() const noexcept override;
 };
-
 
 #endif /* EVENT_H */
