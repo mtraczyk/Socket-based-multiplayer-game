@@ -606,6 +606,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
      * If that's the case needed operations are performed.
      */
     if (gamePlayed) {
+      std::cout << "GAME PLAYED !!" << std::endl;
       checkNextTurn(turningSpeed, boardWidth, boardHeight, sock);
     }
     checkDisconnection(); // check for disconnected clients
