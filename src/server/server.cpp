@@ -139,11 +139,8 @@ namespace {
   }
 
   void performNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
-    std::cout << "Takes part in the current game: ";
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (takesPartInTheCurrentGame[i]) {
-        std::cout << i << " ";
-
         if (turnDirection[i] == LEFT_ARR) {
           playerDirection[i] += (double) turningSpeed;
         } else if (turnDirection[i] == RIGHT_ARR) {
@@ -174,7 +171,6 @@ namespace {
         }
       }
     }
-    std::cout << std::endl;
   }
 
   inline void getCurrentTime() {
@@ -326,15 +322,12 @@ namespace {
       messageAsACArray[i] = datagram[i];
     }
 
-    std::cout << messageAsACArray << std::endl;
-
     int sendFlags = 0;
     sndaLen = (socklen_t) sizeof(sockaddr);
     /* Ignore errors, we don't want the server to go down.
      * sock is non blocking.
      */
     int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, &auxClientAddress, sndaLen);
-    std::cout << len << std::endl;
     if (len < 0) {
       syserr("send message to a client");
     }
@@ -360,7 +353,6 @@ namespace {
 
     uint32_t numberOfBytesInGameId = 4;
     if (datagram.size() != numberOfBytesInGameId) {
-      std::cout << datagram << " " << datagram.size() << std::endl;
       sendDatagram(datagram, sock);
     }
   }
