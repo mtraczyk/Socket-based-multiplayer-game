@@ -516,6 +516,7 @@ namespace {
   }
 
   inline void setRoundTimer(time_t nanoSecPeriod) {
+    disarmATimer(DATA_ARR_SIZE - 1);
     getCurrentTime();
     //set timer
     newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
