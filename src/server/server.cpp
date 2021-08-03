@@ -65,6 +65,7 @@ struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 
 struct itimerspec newValue[DATA_ARR_SIZE];
+struct itimerspec oldValue;
 struct timespec now; // auxiliary struct to store current time
 
 // active players' info.
@@ -196,7 +197,7 @@ namespace {
   inline void disarmATimer(int timerArrNum) {
     newValue[timerArrNum].it_value.tv_sec = 0;
     newValue[timerArrNum].it_value.tv_nsec = 0;
-    if (timerfd_settime(pfds[timerArrNum].fd, TFD_TIMER_ABSTIME, &newValue[timerArrNum], NULL) == -1) {
+    if (timerfd_settime(pfds[timerArrNum].fd, TFD_TIMER_ABSTIME, &newValue[timerArrNum], &oldValue) == -1) {
       syserr("timerfd_settime");
     }
   }
@@ -521,7 +522,7 @@ namespace {
     newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec + nanoSecPeriod; // first expiration time
     newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 0;
     newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = nanoSecPeriod; // period
-    if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE - 1], NULL) == -1) {
+    if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE - 1], &oldValue) == -1) {
       syserr("timerfd_settime");
     }
   }
