@@ -586,28 +586,25 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
             uint8_t roundsPerSecond, uint16_t boardWidth, uint16_t boardHeight) {
   int sock; // socket descriptor
   int ready; // variable to store poll return value
-  struct addrinfo hints;
-  struct addrinfo *servInfo;
+  struct sockaddr_in6 serverAddress{};
   randomNumber = seed; // first random number equals to the seed's value
 
-  memset(&hints, 0, sizeof hints);
-
-  hints.ai_family = AF_UNSPEC; // use IPv4 or IPv6, whichever
-  hints.ai_socktype = SOCK_DGRAM;
-  hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-
-  if (getaddrinfo(nullptr, std::to_string(portNum).c_str(), &hints, &servInfo) != 0) {
-    syserr("server getaddrinfo error");
-  }
-
-  sock = socket(servInfo->ai_family, servInfo->ai_socktype, servInfo->ai_protocol); // UDP socket
+  sock = socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP); // creating IPv6 UDP socket
 
   if (sock < 0) {
     syserr("server socket creation");
   }
 
+  serverAddress.sin6_family = AF_INET6;
+  serverAddress.sin6_addr = in6addr_any; // listening on all interfaces
+  serverAddress.sin6_port = portNum;
+
+  int v6OnlyEnabled = 0;  // disable v-6 only mode
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6OnlyEnabled, sizeof(v6OnlyEnabled)) != 0)
+    syserr("setsockopt");
+
   // bind the socket to a concrete address
-  if (bind(sock, servInfo->ai_addr, servInfo->ai_addrlen) < 0) {
+  if (bind(sock, (struct sockaddr*) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
     syserr("server socket bind, address taken.");
   }
 
