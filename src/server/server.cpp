@@ -586,7 +586,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
             uint8_t roundsPerSecond, uint16_t boardWidth, uint16_t boardHeight) {
   int sock; // socket descriptor
   int ready; // variable to store poll return value
-  struct sockaddr_in6 serverAddress{};
+  struct sockaddr_in6 serverAddress;
   randomNumber = seed; // first random number equals to the seed's value
 
   sock = socket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP); // creating IPv6 UDP socket
@@ -595,13 +595,15 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     syserr("server socket creation");
   }
 
+  memset(&serverAddress, 0, sizeof(serverAddress));
   serverAddress.sin6_family = AF_INET6;
   serverAddress.sin6_addr = in6addr_any; // listening on all interfaces
   serverAddress.sin6_port = portNum;
 
   int v6OnlyEnabled = 0;  // disable v-6 only mode
-  if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6OnlyEnabled, sizeof(v6OnlyEnabled)) != 0)
+  if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6OnlyEnabled, sizeof(v6OnlyEnabled)) != 0) {
     syserr("setsockopt");
+  }
 
   // bind the socket to a concrete address
   if (bind(sock, (struct sockaddr*) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
@@ -632,8 +634,6 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     checkDatagram(sock); // check for something to read in the socket
     newGame(NANO_SEC / roundsPerSecond, boardWidth, boardHeight, sock); // check the possibility of starting a new game
   }
-
-  freeaddrinfo(servInfo);
 
   if (close(sock) == -1) { // very rare errors can occur here, but then
     syserr("close"); // it's healthy to do the check
