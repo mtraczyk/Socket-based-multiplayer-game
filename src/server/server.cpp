@@ -419,6 +419,8 @@ namespace {
   }
 
   void checkDatagram(int sock) {
+    std::cout << "check datagram" << std::endl;
+
     sndaLen = sizeof(clientAddress);
     rcvaLen = sizeof(clientAddress);
     flags = 0; // we do net request anything special
@@ -610,12 +612,12 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     syserr("server socket bind, address taken.");
   }
 
-  // socket is non-blocking
-  if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
-    syserr("server fctl failed");
-  }
-
-  signal(SIGPIPE, SIG_IGN); // Ignoring SIGPIPE.
+//  // socket is non-blocking
+//  if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
+//    syserr("server fctl failed");
+//  }
+//
+//  signal(SIGPIPE, SIG_IGN); // Ignoring SIGPIPE.
   setPollfdArray(sock); // sets the array that will be used for polling
 
   for (;;) {
