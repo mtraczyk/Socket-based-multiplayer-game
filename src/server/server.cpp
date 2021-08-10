@@ -224,11 +224,11 @@ namespace {
 
   void getIPAndPort(std::string &ip, in_port_t *port, sockaddr_storage *pAddress) {
     char *auxIP = nullptr;
-    if (pAddress->sa_family == AF_INET) {
+    if (pAddress->ss_family == AF_INET) {
       auxIP = new char[INET_ADDRSTRLEN];
       auxIP = const_cast<char *>(inet_ntop(AF_INET, pAddress, auxIP, INET_ADDRSTRLEN));
       *port = ((struct sockaddr_in *) pAddress)->sin_port;
-    } else if (pAddress->sa_family == AF_INET6) {
+    } else if (pAddress->ss_family == AF_INET6) {
       auxIP = new char[INET6_ADDRSTRLEN];
       auxIP = const_cast<char *>(inet_ntop(AF_INET6, pAddress, auxIP, INET6_ADDRSTRLEN));
       *port = ((struct sockaddr_in6 *) pAddress)->sin6_port;
