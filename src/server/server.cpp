@@ -69,7 +69,7 @@ struct itimerspec oldValue;
 struct timespec now; // auxiliary struct to store current time
 
 // active players' info.
-struct sockaddr clientAddress[DATA_ARR_SIZE];
+struct sockaddr_storage clientAddress[DATA_ARR_SIZE];
 time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
 uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
 uint8_t turnDirection[DATA_ARR_SIZE]; // turn direction for every connected player
@@ -88,7 +88,7 @@ int playingPlayerDataIndex[DATA_ARR_SIZE]; // index in connection data tables
 bool isPlayerDead[DATA_ARR_SIZE];
 
 // socket connection data
-struct sockaddr auxClientAddress;
+struct sockaddr_storage auxClientAddress;
 socklen_t rcvaLen, sndaLen;
 int flags, len;
 
@@ -222,7 +222,7 @@ namespace {
     }
   }
 
-  void getIPAndPort(std::string &ip, in_port_t *port, sockaddr *pAddress) {
+  void getIPAndPort(std::string &ip, in_port_t *port, sockaddr_storage *pAddress) {
     char *auxIP = nullptr;
     if (pAddress->sa_family == AF_INET) {
       auxIP = new char[INET_ADDRSTRLEN];
@@ -326,11 +326,11 @@ namespace {
     }
 
     int sendFlags = 0;
-    sndaLen = (socklen_t) sizeof(sockaddr);
+    sndaLen = (socklen_t) sizeof(struct sockaddr_storage);
     /* Ignore errors, we don't want the server to go down.
      * sock is non blocking.
      */
-    int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, &auxClientAddress, sndaLen);
+    int len = sendto(sock, messageAsACArray, datagram.size(), sendFlags, (sockaddr *) &auxClientAddress, sndaLen);
     if (len < 0) {
       syserr("send message to a client");
     }
@@ -385,8 +385,8 @@ namespace {
   }
 
   void setClientAddress(int index) {
-    memset(&clientAddress[index], 0, sizeof(struct sockaddr));
-    memcpy(&clientAddress[index], &auxClientAddress, sizeof(struct sockaddr));
+    memset(&clientAddress[index], 0, sizeof(struct sockaddr_storage));
+    memcpy(&clientAddress[index], &auxClientAddress, sizeof(struct sockaddr_storage));
   }
 
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
@@ -419,15 +419,12 @@ namespace {
   }
 
   void checkDatagram(int sock) {
-    std::cout << "check datagram" << std::endl;
-
-    sndaLen = sizeof(auxClientAddress);
-    rcvaLen = sizeof(auxClientAddress);
+    rcvaLen = sizeof(struct sockaddr_storage);
     flags = 0; // we do net request anything special
 
     memset(buffer, 0, BUFFER_SIZE);
-    memset(&auxClientAddress, 0, sizeof(struct sockaddr));
-    len = recvfrom(sock, buffer, sizeof(buffer), flags, &auxClientAddress, &rcvaLen);
+    memset(&auxClientAddress, 0, sizeof(struct sockaddr_storage));
+    len = recvfrom(sock, buffer, sizeof(buffer), flags, (sockaddr *) &auxClientAddress, &rcvaLen);
 
     // variables to store client's data
     uint64_t auxSessionId = 0;
@@ -511,7 +508,7 @@ namespace {
   void sendEvent(int sock) {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (lastActivity[i] != 0) {
-        memcpy(&auxClientAddress, &clientAddress[i], sizeof(struct sockaddr));
+        memcpy(&auxClientAddress, &clientAddress[i], sizeof(struct sockaddr_storage));
         sendDatagrams(events().size() - 1, sock);
       }
     }
