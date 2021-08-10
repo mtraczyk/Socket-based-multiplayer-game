@@ -600,7 +600,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   memset(&serverAddress, 0, sizeof(serverAddress));
   serverAddress.sin6_family = AF_INET6;
   serverAddress.sin6_addr = in6addr_any; // listening on all interfaces
-  serverAddress.sin6_port = portNum;
+  serverAddress.sin6_port = htons(portNum);
 
   int v6OnlyEnabled = 0;  // disable v-6 only mode
   if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6OnlyEnabled, sizeof(v6OnlyEnabled)) != 0) {
@@ -612,12 +612,12 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     syserr("server socket bind, address taken.");
   }
 
-//  // socket is non-blocking
-//  if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
-//    syserr("server fctl failed");
-//  }
-//
-//  signal(SIGPIPE, SIG_IGN); // Ignoring SIGPIPE.
+  // socket is non-blocking
+  if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
+    syserr("server fctl failed");
+  }
+
+  signal(SIGPIPE, SIG_IGN); // Ignoring SIGPIPE.
   setPollfdArray(sock); // sets the array that will be used for polling
 
   for (;;) {
