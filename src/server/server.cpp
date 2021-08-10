@@ -421,8 +421,8 @@ namespace {
   void checkDatagram(int sock) {
     std::cout << "check datagram" << std::endl;
 
-    sndaLen = sizeof(clientAddress);
-    rcvaLen = sizeof(clientAddress);
+    sndaLen = sizeof(auxClientAddress);
+    rcvaLen = sizeof(auxClientAddress);
     flags = 0; // we do net request anything special
 
     memset(buffer, 0, BUFFER_SIZE);
@@ -533,8 +533,6 @@ namespace {
   void newGame(time_t nanoSecPeriod, uint32_t boardWidth, uint32_t boardHeight, int sock) {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
       gamePlayed = true;
-
-      std::cout << "!! new game" << std::endl;
 
       for (auto u : events()) {
         delete u;
