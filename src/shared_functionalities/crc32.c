@@ -98,7 +98,7 @@ const uint32_t crc32_tab[] = {
  * in sys/libkern.h, where it can be inlined.
  */
 
-inline uint32_t crc32(const void *buf, size_t size) {
+uint32_t crc32(const void *buf, size_t size) {
   const uint8_t *p = buf;
   uint8_t byte;
   uint32_t crc32 = 0xFFFFFFFF;
