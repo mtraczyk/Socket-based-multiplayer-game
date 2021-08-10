@@ -100,16 +100,10 @@ const uint32_t crc32_tab[] = {
 
 uint32_t crc32(const void *buf, size_t size) {
   const uint8_t *p = buf;
-  uint8_t byte;
-  uint32_t crc32 = 0xFFFFFFFF;
+  uint32_t crc;
 
-  for (uint32_t i = 0; i < size; i++) {
-    byte = p[i];
-    uint32_t index = (crc32 ^ byte) & 0xFF;
-    crc32 = (crc32 >> 8) ^ crc32_tab[index];
-  }
-
-  crc32 = crc32 ^ 0xFFFFFFFF;
-
-  return crc32;
+  crc = ~0U;
+  while (size--)
+    crc = crc32_tab[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
+  return crc ^ ~0U;
 }
