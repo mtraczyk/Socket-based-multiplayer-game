@@ -534,6 +534,8 @@ namespace {
     if (!gamePlayed && numberOfReadyPlayers() >= MIN_NUM_OF_PLAYERS_TO_START_A_GAME) {
       gamePlayed = true;
 
+      std::cout << "!! new game" << std::endl;
+
       for (auto u : events()) {
         delete u;
       }
