@@ -31,6 +31,7 @@
 #define MAX_DATAGRAM_SIZE 550 // datagram can be long up to 550
 #define NANO_SEC 1000000000 // one nanosecond
 #define DIS_TIME_NANO 2 * NANO_SEC // disconnection time in nanoseconds
+#define DIS_TIME_SEC 2
 #define BUFFER_SIZE 4096
 #define CLIENT_DATAGRAM_MIN_SIZE 13 // session_id + turn_direction + next_expected_event_no = 13
 #define CLIENT_DATAGRAM_MAX_SIZE 33 // session_id + turn_direction + next_expected_event_no + player_name = 33
@@ -389,6 +390,18 @@ namespace {
     memcpy(&clientAddress[index], &auxClientAddress, sizeof(struct sockaddr_storage));
   }
 
+  void setDisconnectionTimer(int index) {
+    getCurrentTime();
+    //set timer
+    newValue[index].it_value.tv_sec = now.tv_sec + DIS_TIME_SEC; // first expiration time
+    newValue[index].it_value.tv_nsec = 0;
+    newValue[index].it_interval.tv_sec = DIS_TIME_SEC; // period
+    newValue[index].it_interval.tv_nsec = 0;
+    if (timerfd_settime(pfds[index].fd, TFD_TIMER_ABSTIME, &newValue[index], &oldValue) == -1) {
+      syserr("timerfd_settime");
+    }
+  }
+
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
     // find free index in the data array
     int index = findFreeIndex();
@@ -399,6 +412,7 @@ namespace {
     // new activity being made
     getCurrentTime();
     lastActivity[index] = now.tv_nsec;
+    setDisconnectionTimer(index);
 
     // set data
     sessionId[index] = auxSessionId;
