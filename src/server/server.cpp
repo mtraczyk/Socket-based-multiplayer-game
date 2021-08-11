@@ -188,6 +188,8 @@ namespace {
   void checkNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
+        getCurrentTime();
+        std::cout << now.tv_nsec << std::endl;
         performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
