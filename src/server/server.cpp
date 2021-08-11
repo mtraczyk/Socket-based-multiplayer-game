@@ -310,8 +310,8 @@ namespace {
         auxPlayerName += buffer[i];
       }
 
-//      std::cout << "datagram: " << auxPlayerName << " turn direction: "
-//                << (int) (*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
+      std::cout << "datagram: " << auxPlayerName << " turn direction: "
+                << (int) (*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
     } else {
       std::cout << "incorrect datagram" << std::endl;
       return false;
