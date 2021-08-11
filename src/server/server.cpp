@@ -189,6 +189,7 @@ namespace {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
+        pfds[DATA_ARR_SIZE - 1].revents = 0;
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
       }
@@ -208,6 +209,7 @@ namespace {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
       if (pfds[i].revents != 0) {
         if (pfds[i].revents & POLLIN) {
+          pfds[i].revents = 0;
           getCurrentTime();
           std::cout << i << " " << now.tv_nsec << std::endl;
           if (lastActivity[i] != 0 && now.tv_nsec - lastActivity[i] > DIS_TIME_NANO) {
