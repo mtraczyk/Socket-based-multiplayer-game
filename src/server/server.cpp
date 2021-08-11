@@ -298,7 +298,7 @@ namespace {
       // bytes 9 to 12 set out expected_event_no
       for (int i = EXPECTED_EVENT_NO_BLOCK_START; i < 9 + bytesNumber; i++) {
         *nextExpectedEventNo += ((uint32_t) buffer[i]
-          << (bytesNumber * BITS_IN_A_BYTE_NUM - (i + 1) * BITS_IN_A_BYTE_NUM));
+          << (bytesNumber * BITS_IN_A_BYTE_NUM - (i + 1 - EXPECTED_EVENT_NO_BLOCK_START) * BITS_IN_A_BYTE_NUM));
       }
 
       // player name block starts with byte number 13
@@ -605,7 +605,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   }
 
   // bind the socket to a concrete address
-  if (bind(sock, (struct sockaddr*) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
+  if (bind(sock, (struct sockaddr *) &serverAddress, (socklen_t) sizeof(serverAddress)) < 0) {
     syserr("server socket bind, address taken.");
   }
 
