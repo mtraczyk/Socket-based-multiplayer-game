@@ -188,8 +188,6 @@ namespace {
   void checkNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
-        getCurrentTime();
-        std::cout << now.tv_nsec << std::endl;
         performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
@@ -211,6 +209,7 @@ namespace {
       if (pfds[i].revents != 0) {
         if (pfds[i].revents & POLLIN) {
           getCurrentTime();
+          std::cout << i << " " << now.tv_nsec << std::endl;
           if (lastActivity[i] != 0 && now.tv_nsec - lastActivity[i] > DIS_TIME_NANO) {
             // disconnected
             activePlayersNum--; // update number of players
