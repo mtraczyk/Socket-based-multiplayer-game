@@ -398,8 +398,8 @@ namespace {
     //set timer
     newValue[index].it_value.tv_sec = 0;
     newValue[index].it_value.tv_nsec = now.tv_nsec; // first expiration time
-    newValue[index].it_interval.tv_sec = 0;
-    newValue[index].it_interval.tv_nsec = DIS_TIME_NANO; // period
+    newValue[index].it_interval.tv_sec = DIS_TIME_SEC; // period
+    newValue[index].it_interval.tv_nsec = 0;
     if (timerfd_settime(pfds[index].fd, TFD_TIMER_ABSTIME, &newValue[index], &oldValue) == -1) {
       syserr("timerfd_settime");
     }
