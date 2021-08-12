@@ -188,6 +188,8 @@ namespace {
   void checkNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
+        getCurrentTime();
+        std::cout << "game round: " << now.tv_nsec << std::endl;
         performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
         pfds[DATA_ARR_SIZE - 1].revents = 0;
       } else { /* POLLERR | POLLHUP */
@@ -212,7 +214,7 @@ namespace {
           pfds[i].revents = 0;
           getCurrentTime();
           std::cout << i << " " << now.tv_nsec << std::endl;
-          if (lastActivity[i] != 0 && now.tv_nsec - lastActivity[i] > DIS_TIME_NANO) {
+          if (lastActivity[i] != 0 && now.tv_sec - lastActivity[i] > DIS_TIME_NANO) {
             // disconnected
             activePlayersNum--; // update number of players
             lastActivity[i] = 0;
@@ -535,7 +537,7 @@ namespace {
     disarmATimer(DATA_ARR_SIZE - 1);
     getCurrentTime();
     //set timer
-    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = 0;
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
     newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec; // first expiration time
     newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 0;
     newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = nanoSecPeriod; // period
@@ -646,7 +648,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     if (gamePlayed) {
       checkNextTurn(turningSpeed, boardWidth, boardHeight, sock);
     }
-    checkDisconnection(); // check for disconnected clients
+   // checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
     newGame(NANO_SEC / roundsPerSecond, boardWidth, boardHeight, sock); // check the possibility of starting a new game
   }
