@@ -124,7 +124,7 @@ namespace {
     pfds[0].revents = 0;
 
     for (int i = 1; i < DATA_ARR_SIZE; i++) {
-      pfds[i].fd = timerfd_create(CLOCK_REALTIME, 0);
+      pfds[i].fd = timerfd_create(CLOCK_REALTIME, O_NONBLOCK);
       if (pfds[i].fd == -1) {
         syserr("timerfd_create");
       }
@@ -188,10 +188,15 @@ namespace {
   void checkNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     if (pfds[DATA_ARR_SIZE - 1].revents != 0) {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
-        getCurrentTime();
-        std::cout << "game round: " << now.tv_nsec << std::endl;
-        performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
-        pfds[DATA_ARR_SIZE - 1].revents = 0;
+        uint64_t buf;
+        int expired = read(pfds[DATA_ARR_SIZE - 1].fd, &buf, sizeof(uint64_t));
+        if( expired > 1 ) {
+
+          getCurrentTime();
+          std::cout << "game round: " << now.tv_nsec << std::endl;
+          performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
+          pfds[DATA_ARR_SIZE - 1].revents = 0;
+        }
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
       }
