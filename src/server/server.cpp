@@ -190,7 +190,7 @@ namespace {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         uint64_t buf;
         int expired = read(pfds[DATA_ARR_SIZE - 1].fd, &buf, sizeof(uint64_t));
-        if( expired > 1 ) {
+        if(expired >= 0) {
 
           getCurrentTime();
           std::cout << "game round: " << now.tv_nsec << std::endl;
@@ -540,10 +540,10 @@ namespace {
 
   inline void setRoundTimer(time_t nanoSecPeriod) {
     //set timer
-    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = 1;
-    newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = 0; // first expiration time
-    newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 1;
-    newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = 0; // period
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = 0;
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = nanoSecPeriod; // first expiration time
+    newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 0;
+    newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = nanoSecPeriod; // period
     if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, 0, &newValue[DATA_ARR_SIZE - 1], NULL) == -1) {
       syserr("timerfd_settime");
     }
