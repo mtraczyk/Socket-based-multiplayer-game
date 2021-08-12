@@ -124,7 +124,7 @@ namespace {
     pfds[0].revents = 0;
 
     for (int i = 1; i < DATA_ARR_SIZE; i++) {
-      pfds[i].fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
+      pfds[i].fd = timerfd_create(CLOCK_REALTIME, 0);
       if (pfds[i].fd == -1) {
         syserr("timerfd_create");
       }
