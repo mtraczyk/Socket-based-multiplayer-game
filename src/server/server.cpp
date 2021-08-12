@@ -534,14 +534,12 @@ namespace {
   }
 
   inline void setRoundTimer(time_t nanoSecPeriod) {
-    disarmATimer(DATA_ARR_SIZE - 1);
-    getCurrentTime();
     //set timer
-    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = 0;
-    newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec; // first expiration time
-    newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 0;
-    newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = nanoSecPeriod; // period
-    if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, TFD_TIMER_ABSTIME, &newValue[DATA_ARR_SIZE - 1], &oldValue) == -1) {
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = 1;
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = 0; // first expiration time
+    newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 1;
+    newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = 0; // period
+    if (timerfd_settime(pfds[DATA_ARR_SIZE - 1].fd, 0, &newValue[DATA_ARR_SIZE - 1], NULL) == -1) {
       syserr("timerfd_settime");
     }
   }
