@@ -537,7 +537,7 @@ namespace {
     disarmATimer(DATA_ARR_SIZE - 1);
     getCurrentTime();
     //set timer
-    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = now.tv_sec;
+    newValue[DATA_ARR_SIZE - 1].it_value.tv_sec = 0;
     newValue[DATA_ARR_SIZE - 1].it_value.tv_nsec = now.tv_nsec; // first expiration time
     newValue[DATA_ARR_SIZE - 1].it_interval.tv_sec = 0;
     newValue[DATA_ARR_SIZE - 1].it_interval.tv_nsec = nanoSecPeriod; // period
