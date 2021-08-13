@@ -69,7 +69,9 @@ struct itimerspec newValue[DATA_ARR_SIZE];
 struct itimerspec oldValue;
 struct timespec now; // auxiliary struct to store current time
 
-// active players' info.
+// connected players' info.
+bool isPlayerActive[DATA_ARR_SIZE];
+bool hasPlayerResponded[DATA_ARR_SIZE];
 struct sockaddr_storage clientAddress[DATA_ARR_SIZE];
 time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
 uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
@@ -190,13 +192,15 @@ namespace {
       if (pfds[DATA_ARR_SIZE - 1].revents & POLLIN) {
         uint64_t buf;
         int expired = read(pfds[DATA_ARR_SIZE - 1].fd, &buf, sizeof(uint64_t));
-        if(expired >= 0) {
-
-          getCurrentTime();
-          std::cout << "game round: " << now.tv_nsec << std::endl;
-          performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
-          pfds[DATA_ARR_SIZE - 1].revents = 0;
+        if (expired < 0) {
+          syserr("timerfd read");
         }
+
+        getCurrentTime();
+        std::cout << "game round: " << now.tv_nsec << std::endl;
+        performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
+        pfds[DATA_ARR_SIZE - 1].revents = 0;
+
       } else { /* POLLERR | POLLHUP */
         syserr("turn timer error");
       }
@@ -206,7 +210,7 @@ namespace {
   inline void disarmATimer(int timerArrNum) {
     newValue[timerArrNum].it_value.tv_sec = 0;
     newValue[timerArrNum].it_value.tv_nsec = 0;
-    if (timerfd_settime(pfds[timerArrNum].fd, TFD_TIMER_ABSTIME, &newValue[timerArrNum], &oldValue) == -1) {
+    if (timerfd_settime(pfds[timerArrNum].fd, 0, &newValue[timerArrNum], &oldValue) == -1) {
       syserr("timerfd_settime");
     }
   }
@@ -217,12 +221,19 @@ namespace {
       if (pfds[i].revents != 0) {
         if (pfds[i].revents & POLLIN) {
           pfds[i].revents = 0;
+
+          uint64_t buf;
+          int expired = read(pfds[DATA_ARR_SIZE - 1].fd, &buf, sizeof(uint64_t));
+          if (expired < 0) {
+            syserr("timerfd read");
+          }
+
           getCurrentTime();
           std::cout << i << " " << now.tv_nsec << std::endl;
-          if (lastActivity[i] != 0 && now.tv_sec - lastActivity[i] > DIS_TIME_NANO) {
+          if (!hasPlayerResponded[i]) {
             // disconnected
             activePlayersNum--; // update number of players
-            lastActivity[i] = 0;
+            isPlayerActive[i] = false;
             namesUsed().erase(playerName[i]);
             disarmATimer(i);
           }
@@ -267,9 +278,8 @@ namespace {
 
     if (!auxIP.empty()) {
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-        if (lastActivity[i] != 0) {
+        if (isPlayerActive[i]) {
           // check a connected client
-          std::cout << i << " connected client";
           getIPAndPort(clientIP, &clientPort, &clientAddress[i]);
           if (clientIP.empty()) {
             codeResult = ERROR;
@@ -377,8 +387,7 @@ namespace {
     // here auxSessionId <= sessionId[indexInDataArray]
     if (auxSessionId == sessionId[indexInDataArray] && namesUsed().find(auxPlayerName) != namesUsed().end()) {
       // datagram isn't ignored
-      getCurrentTime();
-      lastActivity[indexInDataArray] = now.tv_nsec;
+      hasPlayerResponded[indexInDataArray] = true;
       turnDirection[indexInDataArray] = auxTurnDirection;
       sendDatagrams(nextExpectedEvenNo, sock);
     }
@@ -386,7 +395,7 @@ namespace {
 
   inline int findFreeIndex() {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (lastActivity[i] == 0) {
+      if (!isPlayerActive[i]) {
         // It also can't be a bot.
         return i;
       }
@@ -404,10 +413,10 @@ namespace {
     getCurrentTime();
     //set timer
     newValue[index].it_value.tv_sec = 0;
-    newValue[index].it_value.tv_nsec = now.tv_nsec; // first expiration time
-    newValue[index].it_interval.tv_sec = 0; // period
-    newValue[index].it_interval.tv_nsec = 100000000;
-    if (timerfd_settime(pfds[index].fd, TFD_TIMER_ABSTIME, &newValue[index], &oldValue) == -1) {
+    newValue[index].it_value.tv_nsec = 0; // first expiration time
+    newValue[index].it_interval.tv_sec = DIS_TIME_SEC; // period
+    newValue[index].it_interval.tv_nsec = 1; // first expiration time
+    if (timerfd_settime(pfds[index].fd, 0, &newValue[index], &oldValue) == -1) {
       syserr("timerfd_settime");
     }
   }
@@ -421,7 +430,8 @@ namespace {
 
     // new activity being made
     getCurrentTime();
-    lastActivity[index] = now.tv_nsec;
+    hasPlayerResponded[index] = true;
+    isPlayerActive[index] = true;
     setDisconnectionTimer(index);
 
     // set data
@@ -473,7 +483,7 @@ namespace {
   inline int numberOfReadyPlayers() {
     int counter = 0;
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (lastActivity[i] != 0 && !playerName[i].empty() && turnDirection[i] != 0) {
+      if (isPlayerActive[i] && !playerName[i].empty() && turnDirection[i] != 0) {
         counter++;
       }
     }
@@ -531,7 +541,7 @@ namespace {
   // send new event to all the players
   void sendEvent(int sock) {
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (lastActivity[i] != 0) {
+      if (isPlayerActive[i]) {
         memcpy(&auxClientAddress, &clientAddress[i], sizeof(struct sockaddr_storage));
         sendDatagrams(events().size() - 1, sock);
       }
@@ -570,7 +580,7 @@ namespace {
       sendEvent(sock);
 
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-        takesPartInTheCurrentGame[i] = lastActivity[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
+        takesPartInTheCurrentGame[i] = is[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
       }
 
       for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
@@ -651,7 +661,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     if (gamePlayed) {
       checkNextTurn(turningSpeed, boardWidth, boardHeight, sock);
     }
-   // checkDisconnection(); // check for disconnected clients
+    //checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
     newGame(NANO_SEC / roundsPerSecond, boardWidth, boardHeight, sock); // check the possibility of starting a new game
   }
