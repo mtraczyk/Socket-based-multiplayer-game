@@ -588,7 +588,7 @@ namespace {
       sendEvent(sock);
 
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-        takesPartInTheCurrentGame[i] = is[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
+        takesPartInTheCurrentGame[i] = isPlayerActive[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
       }
 
       for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
