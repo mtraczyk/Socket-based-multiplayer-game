@@ -669,7 +669,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     if (gamePlayed) {
       checkNextTurn(turningSpeed, boardWidth, boardHeight, sock);
     }
-    //checkDisconnection(); // check for disconnected clients
+    checkDisconnection(); // check for disconnected clients
     checkDatagram(sock); // check for something to read in the socket
     newGame(NANO_SEC / roundsPerSecond, boardWidth, boardHeight, sock); // check the possibility of starting a new game
   }
