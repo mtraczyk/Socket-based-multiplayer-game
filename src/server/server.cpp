@@ -221,7 +221,7 @@ namespace {
           pfds[i].revents = 0;
 
           uint64_t buf;
-          int expired = read(pfds[DATA_ARR_SIZE - 1].fd, &buf, sizeof(uint64_t));
+          int expired = read(pfds[i].fd, &buf, sizeof(uint64_t));
           if (expired < 0) {
             syserr("timerfd read");
           }
@@ -383,7 +383,7 @@ namespace {
         pfds[index].revents = 0;
 
         uint64_t buf;
-        int expired = read(pfds[DATA_ARR_SIZE - 1].fd, &buf, sizeof(uint64_t));
+        int expired = read(pfds[index].fd, &buf, sizeof(uint64_t));
         if (expired < 0) {
           syserr("timerfd read");
         }
