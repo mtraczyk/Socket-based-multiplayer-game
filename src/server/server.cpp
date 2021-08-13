@@ -66,12 +66,10 @@ struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 
 struct itimerspec newValue[DATA_ARR_SIZE];
-struct itimerspec oldValue;
 struct timespec now; // auxiliary struct to store current time
 
 // connected players' info.
 bool isPlayerActive[DATA_ARR_SIZE];
-bool hasPlayerResponded[DATA_ARR_SIZE];
 struct sockaddr_storage clientAddress[DATA_ARR_SIZE];
 time_t lastActivity[DATA_ARR_SIZE]; // when was the last activity performed by a client
 uint64_t sessionId[DATA_ARR_SIZE]; // session id for every connected player
@@ -210,7 +208,7 @@ namespace {
   inline void disarmATimer(int timerArrNum) {
     newValue[timerArrNum].it_value.tv_sec = 0;
     newValue[timerArrNum].it_value.tv_nsec = 0;
-    if (timerfd_settime(pfds[timerArrNum].fd, 0, &newValue[timerArrNum], &oldValue) == -1) {
+    if (timerfd_settime(pfds[timerArrNum].fd, 0, &newValue[timerArrNum], NULL) == -1) {
       syserr("timerfd_settime");
     }
   }
@@ -230,13 +228,11 @@ namespace {
 
           getCurrentTime();
           std::cout << i << " " << now.tv_nsec << std::endl;
-          if (!hasPlayerResponded[i]) {
-            // disconnected
-            activePlayersNum--; // update number of players
-            isPlayerActive[i] = false;
-            namesUsed().erase(playerName[i]);
-            disarmATimer(i);
-          }
+
+          // disconnected
+          activePlayersNum--; // update number of players
+          isPlayerActive[i] = false;
+          namesUsed().erase(playerName[i]);
         } else { /* POLLERR | POLLHUP */
           syserr("disconnection timer error");
         }
@@ -381,14 +377,39 @@ namespace {
     }
   }
 
+  void setDisconnectionTimer(int index) {
+    if (pfds[index].revents != 0) {
+      if (pfds[index].revents & POLLIN) {
+        pfds[index].revents = 0;
+
+        uint64_t buf;
+        int expired = read(pfds[DATA_ARR_SIZE - 1].fd, &buf, sizeof(uint64_t));
+        if (expired < 0) {
+          syserr("timerfd read");
+        }
+      } else { /* POLLERR | POLLHUP */
+        syserr("disconnection timer error");
+      }
+    }
+
+    //set timer
+    newValue[index].it_value.tv_sec = DIS_TIME_SEC; // first expiration time
+    newValue[index].it_value.tv_nsec = 0;
+    newValue[index].it_interval.tv_sec = 0;
+    newValue[index].it_interval.tv_nsec = 0;
+    if (timerfd_settime(pfds[index].fd, 0, &newValue[index], NULL) == -1) {
+      syserr("timerfd_settime");
+    }
+  }
+
   // Process a new datagram from a connected client.
   void newDatagramFromAConnectedClient(uint64_t auxSessionId, uint8_t auxTurnDirection, uint32_t nextExpectedEvenNo,
                                        std::string const &auxPlayerName, int indexInDataArray, int sock) {
     // here auxSessionId <= sessionId[indexInDataArray]
     if (auxSessionId == sessionId[indexInDataArray] && namesUsed().find(auxPlayerName) != namesUsed().end()) {
       // datagram isn't ignored
-      hasPlayerResponded[indexInDataArray] = true;
       turnDirection[indexInDataArray] = auxTurnDirection;
+      setDisconnectionTimer(indexInDataArray);
       sendDatagrams(nextExpectedEvenNo, sock);
     }
   }
@@ -409,18 +430,6 @@ namespace {
     memcpy(&clientAddress[index], &auxClientAddress, sizeof(struct sockaddr_storage));
   }
 
-  void setDisconnectionTimer(int index) {
-    getCurrentTime();
-    //set timer
-    newValue[index].it_value.tv_sec = 0;
-    newValue[index].it_value.tv_nsec = 0; // first expiration time
-    newValue[index].it_interval.tv_sec = DIS_TIME_SEC; // period
-    newValue[index].it_interval.tv_nsec = 1; // first expiration time
-    if (timerfd_settime(pfds[index].fd, 0, &newValue[index], &oldValue) == -1) {
-      syserr("timerfd_settime");
-    }
-  }
-
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
     // find free index in the data array
     int index = findFreeIndex();
@@ -430,7 +439,6 @@ namespace {
 
     // new activity being made
     getCurrentTime();
-    hasPlayerResponded[index] = true;
     isPlayerActive[index] = true;
     setDisconnectionTimer(index);
 
