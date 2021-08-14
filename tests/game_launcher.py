@@ -4,7 +4,7 @@ import time
 import sys
 
 
-DISABLE_STDOUT = True
+DISABLE_STDOUT = False
 
 @dataclass
 class ServerLaunchOptions:

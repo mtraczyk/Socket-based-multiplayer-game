@@ -14,7 +14,7 @@ import random
 RUN_ROUND_ON_GAME_START = False
 
 # debugging options, if your solution requires these it's probably incorrect
-PRINT_RECEIVED_PACKETS = False
+PRINT_RECEIVED_PACKETS = True
 FORCE_IPV6 = False
 SERVER_PORT = random.randint(10000, 20000)
 
