@@ -98,6 +98,7 @@ int64_t randomNumber;
 namespace {
   void addPlayerEliminatedEvent(uint8_t playerNum);
   void addPixelEvent(uint8_t playerNum, uint16_t x, uint16_t y);
+  void addGameOverEvent();
   void sendEvent(int sock);
 
   // global structure used to store info about used names
@@ -142,6 +143,12 @@ namespace {
     return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
   }
 
+  inline void resetData() {
+    for (uint32_t i = 1; i < DATA_ARR_SIZE - 1; i++) {
+      turnDirection[i] = 0;
+    }
+  }
+
   void performNextTurn(uint8_t turningSpeed, uint16_t boardWidth, uint16_t boardHeight, int sock) {
     for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
       auto index = playingPlayerDataIndex[i];
@@ -160,6 +167,7 @@ namespace {
 
         if (checkBorders(auxX, auxY, boardWidth, boardHeight)) {
           if (!(roundedPlayerWormX[index] == auxX && roundedPlayerWormY[index] == auxY)) {
+
             roundedPlayerWormX[index] = auxX;
             roundedPlayerWormY[index] = auxY;
 
@@ -174,7 +182,19 @@ namespace {
               sendEvent(sock);
             }
           }
+        } else {
+          addPlayerEliminatedEvent(i);
+          sendEvent(sock);
         }
+      }
+
+      if (playersInTheGame == 1) {
+        // game finished
+        addGameOverEvent();
+        sendEvent(sock);
+        resetData();
+
+        return;
       }
     }
   }
@@ -194,8 +214,6 @@ namespace {
           syserr("timerfd read");
         }
 
-        getCurrentTime();
-        std::cout << "game round: " << now.tv_nsec << std::endl;
         performNextTurn(turningSpeed, boardWidth, boardHeight, sock);
         pfds[DATA_ARR_SIZE - 1].revents = 0;
 
@@ -491,8 +509,12 @@ namespace {
   inline int numberOfReadyPlayers() {
     int counter = 0;
     for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
-      if (isPlayerActive[i] && !playerName[i].empty() && turnDirection[i] != 0) {
-        counter++;
+      if (isPlayerActive[i] && !playerName[i].empty()) {
+        if (turnDirection[i] != 0) {
+          counter++;
+        } else {
+          return -1;
+        }
       }
     }
 
@@ -510,6 +532,7 @@ namespace {
     Event *aux = new PlayerEliminated(events().size(), PLAYER_ELIMINATED, playerNum, playingPlayerName[playerNum]);
     events().push_back(aux);
     playersInTheGame--;
+
     isPlayerDead[playerNum] = true;
   }
 
@@ -589,13 +612,15 @@ namespace {
 
       for (int i = 1; i < DATA_ARR_SIZE - 1; i++) {
         takesPartInTheCurrentGame[i] = isPlayerActive[i] != 0 && namesUsed().find(playerName[i]) != namesUsed().end();
+        if (takesPartInTheCurrentGame[i]) {
+          playersInTheGame++; // one more player
+        }
       }
 
       for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
         auto index = playingPlayerDataIndex[i];
 
         if (index != -1 && takesPartInTheCurrentGame[index]) {
-          playersInTheGame++; // one more player
           playerWormX[index] = (deterministicRand() % boardWidth) + 0.5;
           playerWormY[index] = (deterministicRand() % boardHeight) + 0.5;
           roundedPlayerWormX[index] = std::floor(playerWormX[index]);
@@ -610,12 +635,15 @@ namespace {
           }
           sendEvent(sock);
         }
-      }
 
-      if (playersInTheGame == 1) {
-        // game finished
-        addGameOverEvent();
-        sendEvent(sock);
+        if (playersInTheGame == 1) {
+          // game finished
+          addGameOverEvent();
+          sendEvent(sock);
+          resetData();
+
+          return;
+        }
       }
     }
   }

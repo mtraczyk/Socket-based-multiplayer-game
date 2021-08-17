@@ -1,4 +1,5 @@
 #include "event.h"
+#include <iostream>
 #include "../server/parsing_functionalities.h"
 #include "parsing_functionalities.h"
 #include "crc32.h"
@@ -15,7 +16,7 @@ namespace {
 
     addNumber(eventPartLength, len);
     eventDatagramPart = eventPartLength + eventDatagramPart;
-    addNumber(eventDatagramPart, crc32(eventDatagramPart.c_str(), sizeof(eventDatagramPart.c_str())));
+    addNumber(eventDatagramPart, crc32(eventDatagramPart.c_str(), eventDatagramPart.length()));
 
     return eventDatagramPart;
   }
