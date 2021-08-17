@@ -449,32 +449,34 @@ namespace {
   }
 
   void processNewPlayer(uint64_t auxSessionId, uint8_t auxTurnDirection, std::string const &auxPlayerName, int sock) {
-    // find free index in the data array
-    int index = findFreeIndex();
-    if (index == ERROR) {
-      fatal("index in processNewPlayer");
-    }
+    if (namesUsed().find(auxPlayerName) == namesUsed().end()) {
+      // find free index in the data array
+      int index = findFreeIndex();
+      if (index == ERROR) {
+        fatal("index in processNewPlayer");
+      }
 
-    // new activity being made
-    getCurrentTime();
-    isPlayerActive[index] = true;
-    setDisconnectionTimer(index);
+      // new activity being made
+      getCurrentTime();
+      isPlayerActive[index] = true;
+      setDisconnectionTimer(index);
 
-    // set data
-    sessionId[index] = auxSessionId;
-    turnDirection[index] = auxTurnDirection;
-    playerName[index] = auxPlayerName;
-    setClientAddress(index);
-    activePlayersNum++;
-    if (!auxPlayerName.empty()) {
-      namesUsed().insert(auxPlayerName);
-    }
+      // set data
+      sessionId[index] = auxSessionId;
+      turnDirection[index] = auxTurnDirection;
+      playerName[index] = auxPlayerName;
+      setClientAddress(index);
+      activePlayersNum++;
+      if (!auxPlayerName.empty()) {
+        namesUsed().insert(auxPlayerName);
+      }
 
-    std::cout << "new player: " << index << " " << playerName[index] << std::endl;
+      std::cout << "new player: " << index << " " << playerName[index] << std::endl;
 
-    if (gamePlayed) {
-      // player is a spectator in the current game, send him all of the datagrams connected to the current match
-      sendDatagrams(0, sock);
+      if (gamePlayed) {
+        // player is a spectator in the current game, send him all of the datagrams connected to the current match
+        sendDatagrams(0, sock);
+      }
     }
   }
 
@@ -496,9 +498,14 @@ namespace {
       // datagram is correct but still might be ignored
       std::pair<int, int> clientConnected = isClientConnected();
 
-      if (clientConnected.first == SUCCESS && auxSessionId <= sessionId[clientConnected.second]) {
-        newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
-                                        nextExpectedEventNo, auxPlayerName, clientConnected.second, sock);
+      if (clientConnected.first == SUCCESS) {
+        if (auxSessionId == sessionId[clientConnected.second]) {
+          newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
+                                          nextExpectedEventNo, auxPlayerName, clientConnected.second, sock);
+        } else if (auxSessionId > sessionId[clientConnected.second]) {
+#warning TODO
+          // Connect new client, disconnect the previous.
+        }
       } else if (!clientConnected.first && MAX_NUM_OF_PLAYERS > activePlayersNum) {
         processNewPlayer(auxSessionId, auxTurnDirection, auxPlayerName, sock);
       }
