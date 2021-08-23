@@ -27,7 +27,7 @@ struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 struct itimerspec newValue;
 struct timespec now; // auxiliary struct to store current time
-struct sockaddr_in gameServerAddress;
+struct sockaddr_in6 gameServerAddress;
 char buffer[BUFFER_SIZE];
 char messageAsACArray[BUFFER_SIZE];
 uint8_t leftKey = KEY_UP;
@@ -58,12 +58,14 @@ namespace {
 
     // initialize socket according to getaddrinfo results
     sock = socket(addrResult->ai_family, addrResult->ai_socktype, addrResult->ai_protocol);
-    if (sock < 0)
+    if (sock < 0) {
       syserr("socket");
+    }
 
     // connect socket to the server
-    if (connect(sock, addrResult->ai_addr, addrResult->ai_addrlen) < 0)
+    if (connect(sock, addrResult->ai_addr, addrResult->ai_addrlen) < 0) {
       syserr("connect");
+    }
 
     freeaddrinfo(addrResult);
 
@@ -79,11 +81,11 @@ namespace {
   inline void setTimerForServerResponse() {
     // set timer
     getCurrentTime();
-    newValue.it_value.tv_sec = now.tv_sec;
-    newValue.it_value.tv_nsec = now.tv_nsec; // first expiration time
+    newValue.it_value.tv_sec = 0;
+    newValue.it_value.tv_nsec = FREQUENCY; // first expiration time
     newValue.it_interval.tv_sec = 0;
     newValue.it_interval.tv_nsec = FREQUENCY; // period
-    if (timerfd_settime(pfds[2].fd, TFD_TIMER_ABSTIME, &newValue, nullptr) == -1) {
+    if (timerfd_settime(pfds[2].fd, 0, &newValue, nullptr) == -1) {
       syserr("timerfd_settime");
     }
   }
@@ -100,6 +102,7 @@ namespace {
 
     for (auto &pfd : pfds) {
       pfd.events = POLLIN;
+      pfds->revents = 0;
     }
   }
 
@@ -142,6 +145,7 @@ namespace {
   inline bool checkPollStatus(uint8_t arrayIndex) {
     if (pfds[arrayIndex].revents != 0) {
       if (pfds[arrayIndex].revents & POLLIN) {
+        pfds[arrayIndex].revents = 0;
         return true;
       } else { /* POLLERR | POLLHUP */
         syserr("check poll error");
@@ -155,7 +159,7 @@ namespace {
     if (checkPollStatus(0)) {
       // there is a message from gui
       cleanBuffer();
-      int len = read(guiSocket, buffer, sizeof(buffer) - 1);
+      int len = read(guiSocket, buffer, BUFFER_SIZE);
       if (len < 0) {
         syserr("read");
       }
@@ -227,6 +231,12 @@ namespace {
 
   void checkSendMessageToGameServer(int udpSocket, std::string const &playerName) {
     if (checkPollStatus(2)) {
+      uint64_t buf;
+      int expired = read(pfds[2].fd, &buf, sizeof(uint64_t));
+      if (expired < 0) {
+        syserr("timerfd read");
+      }
+
       std::string message;
       uint8_t turnDirection = setTurnDirection();
       addNumber(message, sessionId);
@@ -247,29 +257,19 @@ void client(std::string const &gameServer, std::string const &playerName,
   int udpSocket, ready;
 
   // set udp socket for client - game server communication
-  struct addrinfo addrHints;
-  struct addrinfo *addrResult;
 
-  // 'converting' host/port in string to struct addrinfo
-  (void) memset(&addrHints, 0, sizeof(struct addrinfo));
-  addrHints.ai_family = AF_UNSPEC; // IPv6 or IPv4
-  addrHints.ai_socktype = SOCK_DGRAM;
-  addrHints.ai_flags = IPPROTO_UDP;
-  if (getaddrinfo(gameServer.c_str(), std::to_string(gameServerPort).c_str(), &addrHints, &addrResult) != 0) {
-    syserr("getaddrinfo");
-  }
+  struct in6_addr result;
+  inet_pton(AF_INET6, gameServer.c_str(), &result);
 
-  udpSocket = socket(addrResult->ai_family, SOCK_DGRAM, IPPROTO_UDP);
+  udpSocket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (udpSocket < 0) {
     syserr("socket");
   }
 
-  gameServerAddress.sin_family = addrResult->ai_family; // IPv4 or IPv6
-  gameServerAddress.sin_addr.s_addr =
-    ((struct sockaddr_in *) (addrResult->ai_addr))->sin_addr.s_addr; // address IP
-  gameServerAddress.sin_port = htons(gameServerPort); // port from the command line
+  gameServerAddress.sin6_family = AF_INET6; // IPv6
+  gameServerAddress.sin6_addr = result;
+  gameServerAddress.sin6_port = htons(gameServerPort); // port from the command line
 
-  freeaddrinfo(addrResult);
   setPollfdArray(guiSocket, udpSocket); // sets the array that will be used for polling
 
   for (;;) {
@@ -278,9 +278,9 @@ void client(std::string const &gameServer, std::string const &playerName,
       syserr("poll error");
     }
 
+    checkSendMessageToGameServer(udpSocket, playerName);
     checkMessageFromGui(guiSocket);
     checkMessageFromGameServer(udpSocket);
-    checkSendMessageToGameServer(udpSocket, playerName);
   }
 
   (void) close(guiSocket);

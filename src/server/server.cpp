@@ -488,6 +488,8 @@ namespace {
     memset(&auxClientAddress, 0, sizeof(struct sockaddr_storage));
     len = recvfrom(sock, buffer, sizeof(buffer), flags, (sockaddr *) &auxClientAddress, &rcvaLen);
 
+    std::cout << len << std::endl;
+
     // variables to store client's data
     uint64_t auxSessionId = 0;
     uint8_t auxTurnDirection = 0;
@@ -684,6 +686,11 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     syserr("server socket bind, address taken.");
   }
 
+  std::string serverIP;
+  uint16_t serverPort;
+  getIPAndPort(serverIP, &serverPort, (sockaddr_storage *) &serverAddress);
+  std::cout << "Server's address: " << serverIP << " " << ntohs(serverPort) << std::endl;
+
   // socket is non-blocking
   if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
     syserr("server fctl failed");
@@ -697,6 +704,8 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     if (ready == -1) {
       syserr("poll error");
     }
+
+    std::cout << "!!!" << std::endl;
 
     /* Checks whether timer for the next round had expired.
      * If that's the case needed operations are performed.
