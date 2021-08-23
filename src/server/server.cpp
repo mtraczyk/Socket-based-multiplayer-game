@@ -244,9 +244,6 @@ namespace {
             syserr("timerfd read");
           }
 
-          getCurrentTime();
-          std::cout << i << " " << now.tv_nsec << std::endl;
-
           // disconnected
           activePlayersNum--; // update number of players
           isPlayerActive[i] = false;
@@ -344,11 +341,7 @@ namespace {
 
         auxPlayerName += buffer[i];
       }
-
-//      std::cout << "datagram: " << auxPlayerName << " turn direction: "
-//                << (int) (*auxTurnDirection) << " next expected even no: " << *nextExpectedEventNo << std::endl;
     } else {
-      std::cout << "incorrect datagram" << std::endl;
       return false;
     }
 
@@ -471,8 +464,6 @@ namespace {
         namesUsed().insert(auxPlayerName);
       }
 
-      std::cout << "new player: " << index << " " << playerName[index] << std::endl;
-
       if (gamePlayed) {
         // player is a spectator in the current game, send him all of the datagrams connected to the current match
         sendDatagrams(0, sock);
@@ -488,8 +479,6 @@ namespace {
     memset(&auxClientAddress, 0, sizeof(struct sockaddr_storage));
     len = recvfrom(sock, buffer, sizeof(buffer), flags, (sockaddr *) &auxClientAddress, &rcvaLen);
 
-    std::cout << len << std::endl;
-
     // variables to store client's data
     uint64_t auxSessionId = 0;
     uint8_t auxTurnDirection = 0;
@@ -504,9 +493,6 @@ namespace {
         if (auxSessionId == sessionId[clientConnected.second]) {
           newDatagramFromAConnectedClient(auxSessionId, auxTurnDirection,
                                           nextExpectedEventNo, auxPlayerName, clientConnected.second, sock);
-        } else if (auxSessionId > sessionId[clientConnected.second]) {
-#warning TODO
-          // Connect new client, disconnect the previous.
         }
       } else if (!clientConnected.first && MAX_NUM_OF_PLAYERS > activePlayersNum) {
         processNewPlayer(auxSessionId, auxTurnDirection, auxPlayerName, sock);
@@ -551,6 +537,8 @@ namespace {
   }
 
   inline void addGameOverEvent() {
+    std::cout << "Game Over" << std::endl;
+
     Event *aux = new GameOver(events().size(), GAME_OVER);
     events().push_back(aux);
     gamePlayed = false;
@@ -626,6 +614,8 @@ namespace {
         }
       }
 
+      std::cout << "New Game played by " << playersInTheGame << " players" << std::endl;
+
       for (int i = 0; i < DATA_ARR_SIZE - 1; i++) {
         auto index = playingPlayerDataIndex[i];
 
@@ -689,7 +679,7 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
   std::string serverIP;
   uint16_t serverPort;
   getIPAndPort(serverIP, &serverPort, (sockaddr_storage *) &serverAddress);
-  std::cout << "Server's address: " << serverIP << " " << ntohs(serverPort) << std::endl;
+  std::cout << "Server's address: " << serverIP << " port: " << ntohs(serverPort) << std::endl;
 
   // socket is non-blocking
   if (fcntl(sock, F_SETFL, O_NONBLOCK) != 0) {
@@ -704,8 +694,6 @@ void server(uint16_t portNum, int64_t seed, uint8_t turningSpeed,
     if (ready == -1) {
       syserr("poll error");
     }
-
-    std::cout << "!!!" << std::endl;
 
     /* Checks whether timer for the next round had expired.
      * If that's the case needed operations are performed.

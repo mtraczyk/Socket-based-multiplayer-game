@@ -5,7 +5,6 @@
 #include <cstring>
 #include <poll.h>
 #include <sys/timerfd.h>
-#include <iostream>
 #include <chrono>
 
 #include "client.h"
@@ -186,7 +185,6 @@ namespace {
       if (rcvLen < 0) {
         syserr("client's recv");
       }
-      uint32_t auxGameId = readNumberFromBuffer(0, 3);
     }
   }
 
