@@ -6,10 +6,13 @@
 #include <poll.h>
 #include <sys/timerfd.h>
 #include <chrono>
+#include <fcntl.h>
+#include <queue>
 
 #include "client.h"
 #include "../shared_functionalities/err.h"
 #include "../shared_functionalities/parsing_functionalities.h"
+#include "../shared_functionalities/event.h"
 
 #define DATA_ARR_SIZE 3
 #define FREQUENCY 30000000 // how frequent are messages to the game server in nanoseconds
@@ -34,6 +37,8 @@ std::string guiMessages; // used to store fragments that are yet to be parsed
 std::string possibleGuiMessages[4] = {"LEFT_KEY_DOWN", "LEFT_KEY_UP", "RIGHT_KEY_DOWN", "RIGHT_KEY_UP"};
 uint64_t sessionId;
 uint32_t nextExpectedEventNo = 0; // equals zero when a new game starts
+uint32_t gameId;
+std::queue <Event> queueOfGameEvents;
 
 namespace {
   int getGuiSocket(std::string const &guiServer, uint16_t guiServerPort) {
@@ -122,10 +127,12 @@ namespace {
       if (u == '\n') {
         if (aux == possibleGuiMessages[0]) {
           leftKey = KEY_DOWN;
+          rightKey = KEY_UP;
         } else if (aux == possibleGuiMessages[1]) {
           leftKey = KEY_UP;
         } else if (aux == possibleGuiMessages[2]) {
           rightKey = KEY_DOWN;
+          leftKey = KEY_UP;
         } else if (aux == possibleGuiMessages[3]) {
           rightKey = KEY_UP;
         }
@@ -177,12 +184,18 @@ namespace {
     return aux;
   }
 
+  void decodeMessageFromGameServer(uint32_t messageLen) {
+
+  }
+
   void checkMessageFromGameServer(int servSocket) {
     if (checkPollStatus(1)) {
       int rcvLen = read(servSocket, buffer, BUFFER_SIZE);
 
       if (rcvLen < 0 || (rcvLen == 0 && !(errno == EAGAIN || errno == EWOULDBLOCK))) {
         syserr("client's recv");
+      } else {
+        decodeMessageFromGameServer(rcvLen);
       }
     }
   }
@@ -197,13 +210,13 @@ namespace {
     return RIGHT;
   }
 
-  void sendMessageToGameServer(int servSocket, std::string const &message) {
+  void sendMessageToServer(int socket, std::string const &message) {
     auto numberOfBytesYetToBeWritten = message.size();
     for (uint32_t i = 0; i < message.size(); i++) {
       messageAsACArray[i] = message[i];
     }
 
-    auto len = write(servSocket, messageAsACArray, numberOfBytesYetToBeWritten);
+    auto len = write(socket, messageAsACArray, numberOfBytesYetToBeWritten);
 
     if (len < 0) {
       syserr("write");
@@ -213,13 +226,20 @@ namespace {
 
     // Size of the message might be bigger than the buffer's size.
     while (numberOfBytesYetToBeWritten != 0) {
-      len = write(servSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten);
+      len = write(socket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten);
       if (len < 0) {
         syserr("write");
       }
 
       numberOfBytesAlreadyWritten += len;
       numberOfBytesYetToBeWritten -= len;
+    }
+  }
+
+  void sendMessageToGuiServer(int guiSocket) {
+    while (!queueOfGameEvents.empty()) {
+      sendMessageToServer(guiSocket, queueOfGameEvents.front().getByteRepresentationClient());
+      queueOfGameEvents.pop();
     }
   }
 
@@ -238,7 +258,7 @@ namespace {
       addNumber(message, nextExpectedEventNo);
       message += playerName;
 
-      sendMessageToGameServer(servSocket, message);
+      sendMessageToServer(servSocket, message);
     }
   }
 }
@@ -289,6 +309,7 @@ void client(std::string const &gameServer, std::string const &playerName,
     checkSendMessageToGameServer(servSocket, playerName);
     checkMessageFromGui(guiSocket);
     checkMessageFromGameServer(servSocket);
+    sendMessageToGuiServer(guiSocket);
   }
 
   (void) close(guiSocket);
