@@ -26,7 +26,6 @@ struct pollfd pfds[DATA_ARR_SIZE]; // pollfd array
 nfds_t nfds = DATA_ARR_SIZE; // pfds array's size
 struct itimerspec newValue;
 struct timespec now; // auxiliary struct to store current time
-struct sockaddr_in6 gameServerAddress;
 char buffer[BUFFER_SIZE];
 char messageAsACArray[BUFFER_SIZE];
 uint8_t leftKey = KEY_UP;
@@ -44,7 +43,7 @@ namespace {
 
     // 'converting' host/port in string to struct addrinfo
     memset(&addrHints, 0, sizeof(struct addrinfo));
-    addrHints.ai_family = AF_INET6; // IPv6
+    addrHints.ai_family = AF_UNSPEC;
     addrHints.ai_socktype = SOCK_STREAM; // TCP
     addrHints.ai_protocol = IPPROTO_TCP;
 
@@ -89,9 +88,9 @@ namespace {
     }
   }
 
-  inline void setPollfdArray(int guiSocket, int udpSocket) {
+  inline void setPollfdArray(int guiSocket, int servSocket) {
     pfds[0].fd = guiSocket;
-    pfds[1].fd = udpSocket;
+    pfds[1].fd = servSocket;
     pfds[2].fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK);
     if (pfds[2].fd == -1) {
       syserr("timerfd_create");
@@ -178,11 +177,11 @@ namespace {
     return aux;
   }
 
-  void checkMessageFromGameServer(int udpSocket) {
+  void checkMessageFromGameServer(int servSocket) {
     if (checkPollStatus(1)) {
-      int rcvFlags = 0;
-      int rcvLen = recv(udpSocket, buffer, BUFFER_SIZE, rcvFlags);
-      if (rcvLen < 0) {
+      int rcvLen = read(servSocket, buffer, BUFFER_SIZE);
+
+      if (rcvLen < 0 || (rcvLen == 0 && !(errno == EAGAIN || errno == EWOULDBLOCK))) {
         syserr("client's recv");
       }
     }
@@ -198,28 +197,25 @@ namespace {
     return RIGHT;
   }
 
-  void sendMessageToGameServer(int udpSocket, std::string const &message) {
+  void sendMessageToGameServer(int servSocket, std::string const &message) {
     auto numberOfBytesYetToBeWritten = message.size();
     for (uint32_t i = 0; i < message.size(); i++) {
       messageAsACArray[i] = message[i];
     }
 
-    int sflags = 0;
-    int rcvaLen = (socklen_t) sizeof(gameServerAddress);
-    auto len = sendto(udpSocket, messageAsACArray, numberOfBytesYetToBeWritten, sflags,
-                      (struct sockaddr *) &gameServerAddress, rcvaLen);
+    auto len = write(servSocket, messageAsACArray, numberOfBytesYetToBeWritten);
+
     if (len < 0) {
-      syserr("sendto");
+      syserr("write");
     }
     auto numberOfBytesAlreadyWritten = len;
     numberOfBytesYetToBeWritten -= len;
 
     // Size of the message might be bigger than the buffer's size.
     while (numberOfBytesYetToBeWritten != 0) {
-      len = sendto(udpSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten, sflags,
-                   (struct sockaddr *) &gameServerAddress, rcvaLen);
+      len = write(servSocket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten);
       if (len < 0) {
-        syserr("sendto");
+        syserr("write");
       }
 
       numberOfBytesAlreadyWritten += len;
@@ -227,7 +223,7 @@ namespace {
     }
   }
 
-  void checkSendMessageToGameServer(int udpSocket, std::string const &playerName) {
+  void checkSendMessageToGameServer(int servSocket, std::string const &playerName) {
     if (checkPollStatus(2)) {
       uint64_t buf;
       int expired = read(pfds[2].fd, &buf, sizeof(uint64_t));
@@ -242,7 +238,7 @@ namespace {
       addNumber(message, nextExpectedEventNo);
       message += playerName;
 
-      sendMessageToGameServer(udpSocket, message);
+      sendMessageToGameServer(servSocket, message);
     }
   }
 }
@@ -252,23 +248,37 @@ void client(std::string const &gameServer, std::string const &playerName,
   sessionId = std::chrono::duration_cast<std::chrono::milliseconds>(
     std::chrono::system_clock::now().time_since_epoch()).count();
   int guiSocket = getGuiSocket(guiServer, guiServerPort); // obtains socket for client - gui connection
-  int udpSocket, ready;
+  int servSocket, ready;
 
   // set udp socket for client - game server communication
+  struct addrinfo addrHints;
+  struct addrinfo *addrResult;
 
-  struct in6_addr result;
-  inet_pton(AF_INET6, gameServer.c_str(), &result);
+  // 'converting' host/port in string to struct addrinfo
+  (void) memset(&addrHints, 0, sizeof(struct addrinfo));
+  addrHints.ai_family = AF_UNSPEC; // IPv6 or IPv4
+  addrHints.ai_socktype = SOCK_DGRAM;
+  addrHints.ai_flags = IPPROTO_UDP;
+  if (getaddrinfo(gameServer.c_str(), std::to_string(gameServerPort).c_str(), &addrHints, &addrResult) != 0) {
+    syserr("getaddrinfo");
+  }
 
-  udpSocket = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-  if (udpSocket < 0) {
+  servSocket = socket(addrResult->ai_family, SOCK_DGRAM, IPPROTO_UDP);
+  if (servSocket < 0) {
     syserr("socket");
   }
 
-  gameServerAddress.sin6_family = AF_INET6; // IPv6
-  gameServerAddress.sin6_addr = result;
-  gameServerAddress.sin6_port = htons(gameServerPort); // port from the command line
+  if (connect(servSocket, addrResult->ai_addr, addrResult->ai_addrlen) < 0) {
+    syserr("connect");
+  }
 
-  setPollfdArray(guiSocket, udpSocket); // sets the array that will be used for polling
+  // socket is non-blocking
+  if (fcntl(servSocket, F_SETFL, O_NONBLOCK) != 0) {
+    syserr("servSocket fctl failed");
+  }
+
+  freeaddrinfo(addrResult);
+  setPollfdArray(guiSocket, servSocket); // sets the array that will be used for polling
 
   for (;;) {
     ready = poll(pfds, nfds, -1); // wait as long as needed
@@ -276,11 +286,11 @@ void client(std::string const &gameServer, std::string const &playerName,
       syserr("poll error");
     }
 
-    checkSendMessageToGameServer(udpSocket, playerName);
+    checkSendMessageToGameServer(servSocket, playerName);
     checkMessageFromGui(guiSocket);
-    checkMessageFromGameServer(udpSocket);
+    checkMessageFromGameServer(servSocket);
   }
 
   (void) close(guiSocket);
-  (void) close(udpSocket);
+  (void) close(servSocket);
 }
