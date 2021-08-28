@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <queue>
 #include <algorithm>
+#include <netinet/tcp.h>
 
 #include "client.h"
 #include "../shared_functionalities/err.h"
@@ -45,6 +46,7 @@ std::string possibleGuiMessages[4] = {"LEFT_KEY_DOWN", "LEFT_KEY_UP", "RIGHT_KEY
 uint64_t sessionId;
 uint32_t nextExpectedEventNo = 0; // equals zero when a new game starts
 uint32_t gameId = 0;
+uint32_t gameMaxx, gameMaxy;
 bool gamePlayed = false;
 
 namespace {
@@ -70,6 +72,11 @@ namespace {
     sock = socket(addrResult->ai_family, addrResult->ai_socktype, addrResult->ai_protocol);
     if (sock < 0) {
       syserr("socket");
+    }
+
+    int disableNagle = 1;  // disable Nagle's algorithm
+    if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &disableNagle, sizeof(disableNagle)) != 0) {
+      syserr("setsockopt");
     }
 
     // connect socket to the server
@@ -204,6 +211,10 @@ namespace {
   }
 
   inline bool correctName(std::string const &name) {
+    if (name.size() > 20) {
+      return false;
+    }
+
     for (auto const &u : name) {
       if (!(u >= 33 && u <= 126)) {
         return false;
@@ -215,8 +226,6 @@ namespace {
 
   void decodeNewGameMessage(uint32_t index, uint32_t playersDataLen, uint32_t auxGameId) {
     if (!gamePlayed) {
-      gamePlayed = true;
-      gameId = auxGameId;
       auto maxx = readNumberFromBuffer(index, index + 3);
       auto maxy = readNumberFromBuffer(index + 4, index + 7);
       std::vector<std::string> players;
@@ -239,12 +248,25 @@ namespace {
         syserr("incorrect player name");
       }
 
-      std::sort(players.begin(), players.end());
-      eventsQueue().push(new NewGame(nextExpectedEventNo, NEW_GAME, maxx, maxy, players));
-      playersNames().clear();
-      playersNames() = players;
-    } else {
-      syserr("New game event while a game is played");
+      if (players.size() >= 2) {
+        gamePlayed = true;
+        gameId = auxGameId;
+        gameMaxx = maxx;
+        gameMaxy = maxy;
+
+        std::sort(players.begin(), players.end());
+        eventsQueue().push(new NewGame(nextExpectedEventNo, NEW_GAME, maxx, maxy, players));
+        playersNames().clear();
+        playersNames() = players;
+      } else {
+        syserr("incorrect new game data");
+      }
+    }
+  }
+
+  inline void checkPlayerNumber(uint32_t playerNumber) {
+    if (playerNumber >= playersNames().size()) {
+      syserr("incorrect player number");
     }
   }
 
@@ -253,12 +275,18 @@ namespace {
     auto x = readNumberFromBuffer(index + 1, index + 4);
     auto y = readNumberFromBuffer(index + 5, index + 8);
 
+    if (x >= gameMaxx || y >= gameMaxy) {
+      syserr("player out of bounds");
+    }
+
+    checkPlayerNumber(playerNumber);
     eventsQueue().push(new Pixel(nextExpectedEventNo, PIXEL, playerNumber, playersNames()[playerNumber], x, y));
   }
 
   void decodePlayerEliminatedMessage(uint32_t index) {
     auto playerNumber = readNumberFromBuffer(index, index);
 
+    checkPlayerNumber(playerNumber);
     eventsQueue().push(
       new PlayerEliminated(nextExpectedEventNo, PLAYER_ELIMINATED, playerNumber, playersNames()[playerNumber]));
   }
@@ -296,16 +324,16 @@ namespace {
               decodeGameOverMessage();
           }
 
-          nextExpectedEventNo++;
+          if (eventType <= GAME_OVER) {
+            nextExpectedEventNo++;
+          }
         } else {
           return;
         }
 
-//        if (crc32(&buffer[currentIndex], eventLen + 4) == eventCrc32) {
-//          std::cout << ":)" << std::endl;
-//        } else {
-//          break;
-//        }
+        if (crc32(&buffer[currentIndex], eventDataLen + 4) == eventCrc32) {
+          std::cout << ":)" << std::endl;
+        }
 
         messageLen -= (eventDataLen + 8);
         currentIndex += eventDataLen + 8;
