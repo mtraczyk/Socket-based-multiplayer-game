@@ -299,6 +299,11 @@ namespace {
   }
 
   void decodeMessageFromGameServer(uint32_t messageLen) {
+    std::string datagram;
+    for (uint32_t i = 0; i < messageLen; i++) {
+      datagram += buffer[i];
+    }
+
     auto auxGameId = readNumberFromBuffer(0, 3);
     if (!gamePlayed || (gamePlayed && auxGameId == gameId)) {
       messageLen -= 4;
@@ -331,10 +336,6 @@ namespace {
           return;
         }
 
-        if (crc32(&buffer[currentIndex], eventDataLen + 4) == eventCrc32) {
-          std::cout << ":)" << std::endl;
-        }
-
         messageLen -= (eventDataLen + 8);
         currentIndex += eventDataLen + 8;
       }
@@ -346,7 +347,7 @@ namespace {
       int rcvLen = read(servSocket, buffer, BUFFER_SIZE);
 
       if (rcvLen < 0 || (rcvLen == 0 && !(errno == EAGAIN || errno == EWOULDBLOCK))) {
-        syserr("client's recv");
+        syserr("client's read");
       } else {
         decodeMessageFromGameServer(rcvLen);
       }

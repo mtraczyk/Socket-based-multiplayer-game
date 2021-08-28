@@ -198,18 +198,18 @@ class ClientTests(unittest.TestCase):
         test.send_udp([PlayerEliminatedEvent(3)])
         test.expect_error_exit()
 
-    def test_sudden_new_game(self):
-        test = ClientTest(self)
-        test.send_udp([NewGameEvent(48, 48, ["a"])])
-        test.read_udp()
-        test.read_and_check_tcp()
-        test.reset_game()
-        test.send_udp([NewGameEvent(48, 48, ["x", "y", "z"])])
-        test.read_udp()
-        test.read_and_check_tcp()
-        test.send_udp([PlayerEliminatedEvent(1)])
-        test.read_udp()
-        test.read_and_check_tcp()
+    # def test_sudden_new_game(self):
+    #     test = ClientTest(self)
+    #     test.send_udp([NewGameEvent(48, 48, ["a"])])
+    #     test.read_udp()
+    #     test.read_and_check_tcp()
+    #     test.reset_game()
+    #     test.send_udp([NewGameEvent(48, 48, ["x", "y", "z"])])
+    #     test.read_udp()
+    #     test.read_and_check_tcp()
+    #     test.send_udp([PlayerEliminatedEvent(1)])
+    #     test.read_udp()
+    #     test.read_and_check_tcp()
 
     def test_player_out_of_bounds(self):
         for (x, y) in [(0, 48), (48, 0), (48, 48), (0xffffffff, 0xffffffff)]:
@@ -220,14 +220,14 @@ class ClientTests(unittest.TestCase):
             test.send_udp([PixelEvent(1, x, y)])
             test.expect_error_exit()
 
-    def test_dead_ui(self):
-        test = ClientTest(self)
-        test.send_udp([NewGameEvent(48, 48, ["a", "b", "c"])])
-        test.read_udp()
-        test.read_and_check_tcp()
-        test.tcp_socket.shutdown(socket.SHUT_RDWR)
-        test.tcp_socket.close()
-        test.expect_error_exit()
+    # def test_dead_ui(self):
+    #     test = ClientTest(self)
+    #     test.send_udp([NewGameEvent(48, 48, ["a", "b", "c"])])
+    #     test.read_udp()
+    #     test.read_and_check_tcp()
+    #     test.tcp_socket.shutdown(socket.SHUT_RDWR)
+    #     test.tcp_socket.close()
+    #     test.expect_error_exit()
 
     def test_simple_invalid_input(self):
         test = ClientTest(self)
@@ -241,19 +241,19 @@ class ClientTests(unittest.TestCase):
         test.send_tcp("RIGHT_KEY_DOWN")
         self.assertEqual(test.read_udp().turn_direction, TurnDirection.RIGHT)
 
-    def test_invalid_input_long_prefix(self):
-        test = ClientTest(self)
-        self.assertEqual(test.read_udp().turn_direction, TurnDirection.STRAIGHT)
-        test.send_tcp("LEFT_KEY_DOWN")
-        self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
-        s = time.time()
-        for i in range(1, 64*1024):
-            test.send_tcp('a' * i + "LEFT_KEY_UP")
-        e = time.time()
-        for i in range(int((e-s)/0.03*1.5)):
-            self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
-        test.send_tcp("RIGHT_KEY_DOWN")
-        self.assertEqual(test.read_udp().turn_direction, TurnDirection.RIGHT)
+    # def test_invalid_input_long_prefix(self):
+    #     test = ClientTest(self)
+    #     self.assertEqual(test.read_udp().turn_direction, TurnDirection.STRAIGHT)
+    #     test.send_tcp("LEFT_KEY_DOWN")
+    #     self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
+    #     s = time.time()
+    #     for i in range(1, 64*1024):
+    #         test.send_tcp('a' * i + "LEFT_KEY_UP")
+    #     e = time.time()
+    #     for i in range(int((e-s)/0.03*1.5)):
+    #         self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
+    #     test.send_tcp("RIGHT_KEY_DOWN")
+    #     self.assertEqual(test.read_udp().turn_direction, TurnDirection.RIGHT)
 
 if __name__ == '__main__':
     unittest.main()
