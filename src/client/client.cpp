@@ -213,9 +213,10 @@ namespace {
     return true;
   }
 
-  void decodeNewGameMessage(uint32_t index, uint32_t playersDataLen) {
+  void decodeNewGameMessage(uint32_t index, uint32_t playersDataLen, uint32_t auxGameId) {
     if (!gamePlayed) {
       gamePlayed = true;
+      gameId = auxGameId;
       auto maxx = readNumberFromBuffer(index, index + 3);
       auto maxy = readNumberFromBuffer(index + 4, index + 7);
       std::vector<std::string> players;
@@ -283,7 +284,7 @@ namespace {
         if (eventNo == nextExpectedEventNo) {
           switch (eventType) {
             case NEW_GAME:
-              decodeNewGameMessage(currentIndex + 9, eventDataLen - 13);
+              decodeNewGameMessage(currentIndex + 9, eventDataLen - 13, auxGameId);
               break;
             case PIXEL:
               decodePixelMessage(currentIndex + 9);
@@ -306,7 +307,7 @@ namespace {
 //          break;
 //        }
 
-        messageLen -= eventDataLen - 8;
+        messageLen -= (eventDataLen + 8);
         currentIndex += eventDataLen + 8;
       }
     }
