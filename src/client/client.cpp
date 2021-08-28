@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -13,6 +14,7 @@
 #include "../shared_functionalities/err.h"
 #include "../shared_functionalities/parsing_functionalities.h"
 #include "../shared_functionalities/event.h"
+#include "../shared_functionalities/crc32.h"
 
 #define DATA_ARR_SIZE 3
 #define FREQUENCY 30000000 // how frequent are messages to the game server in nanoseconds
@@ -22,6 +24,10 @@
 #define STRAIGHT 0
 #define RIGHT 1
 #define LEFT 2
+#define NEW_GAME 0
+#define PIXEL 1
+#define PLAYER_ELIMINATED 2
+#define GAME_OVER 3
 
 constexpr static uint32_t numberOfBitsInByte = 8;
 
@@ -37,8 +43,9 @@ std::string guiMessages; // used to store fragments that are yet to be parsed
 std::string possibleGuiMessages[4] = {"LEFT_KEY_DOWN", "LEFT_KEY_UP", "RIGHT_KEY_DOWN", "RIGHT_KEY_UP"};
 uint64_t sessionId;
 uint32_t nextExpectedEventNo = 0; // equals zero when a new game starts
-uint32_t gameId;
-std::queue <Event> queueOfGameEvents;
+uint32_t gameId = 0;
+bool gamePlayed = false;
+std::queue<Event> queueOfGameEvents;
 
 namespace {
   int getGuiSocket(std::string const &guiServer, uint16_t guiServerPort) {
@@ -176,16 +183,77 @@ namespace {
   inline uint32_t readNumberFromBuffer(uint32_t leftIndex, uint32_t rightIndex) {
     uint32_t aux = 0;
 
-    for (uint32_t i = leftIndex; i < rightIndex; i++) {
+    for (uint32_t i = leftIndex; i <= rightIndex; i++) {
       aux += ((uint32_t) buffer[i]
-        << ((rightIndex - leftIndex + 1) * numberOfBitsInByte - (i + 1) * numberOfBitsInByte));
+        << ((rightIndex - leftIndex + 1) * numberOfBitsInByte - (i + 1 - leftIndex) * numberOfBitsInByte));
+
+      std::cout << "f: " << (rightIndex - leftIndex + 1) * numberOfBitsInByte -
+                            (i + 1 - leftIndex) * numberOfBitsInByte << std::endl;
     }
 
     return aux;
   }
 
-  void decodeMessageFromGameServer(uint32_t messageLen) {
+  void decodeNewGameMessage(uint32_t index) {
+    if (!gamePlayed) {
+      gamePlayed = true;
+      auto maxx = readNumberFromBuffer(index, index + 3);
+      auto maxy = readNumberFromBuffer(index + 4, index + 7);
 
+      std::cout << maxx << " " << maxy << std::endl;
+    } else {
+      syserr("New game event while a game is played");
+    }
+  }
+
+  void decodePixelMessage(uint32_t index) {
+
+  }
+
+  void decodePlayerEliminatedMessage(uint32_t index) {
+
+  }
+
+  void decodeGameOverMessage() {
+
+  }
+
+  void decodeMessageFromGameServer(uint32_t messageLen) {
+    auto auxGameId = readNumberFromBuffer(0, 3);
+    if (!gamePlayed || (gamePlayed && auxGameId == gameId)) {
+      messageLen -= 4;
+      auto currentIndex = 4;
+      while (messageLen > 0) {
+        auto eventLen = readNumberFromBuffer(currentIndex, currentIndex + 3);
+        auto eventCrc32 = readNumberFromBuffer(currentIndex + eventLen + 4, currentIndex + eventLen + 7);
+        auto eventNo = readNumberFromBuffer(currentIndex + 4, currentIndex + 7);
+        auto eventType = readNumberFromBuffer(currentIndex + 8, currentIndex + 8);
+
+        if (eventNo == nextExpectedEventNo) {
+          switch (eventType) {
+            case NEW_GAME:
+              decodeNewGameMessage(currentIndex + 9);
+            case PIXEL:
+              decodePixelMessage(currentIndex + 9);
+            case PLAYER_ELIMINATED:
+              decodePlayerEliminatedMessage(currentIndex + 9);
+            case GAME_OVER:
+              decodeGameOverMessage();
+          }
+        } else {
+          return;
+        }
+
+//        if (crc32(&buffer[currentIndex], eventLen + 4) == eventCrc32) {
+//          std::cout << ":)" << std::endl;
+//        } else {
+//          break;
+//        }
+
+        messageLen -= eventLen - 8;
+        currentIndex += eventLen + 8;
+      }
+    }
   }
 
   void checkMessageFromGameServer(int servSocket) {
