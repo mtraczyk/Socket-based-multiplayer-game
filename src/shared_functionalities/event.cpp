@@ -37,9 +37,9 @@ std::string NewGame::getByteRepresentationServer() const noexcept {
 
 std::string NewGame::getByteRepresentationClient() const noexcept {
   std::string eventDatagram = "NEW_GAME ";
-  addNumber(eventDatagram, maxx);
+  eventDatagram += std::to_string(maxx);
   eventDatagram += " ";
-  addNumber(eventDatagram, maxy);
+  eventDatagram += std::to_string(maxy);
 
   for (const auto &u : playersNames) {
     eventDatagram += " " + u;
@@ -63,9 +63,9 @@ std::string Pixel::getByteRepresentationServer() const noexcept {
 
 std::string Pixel::getByteRepresentationClient() const noexcept {
   std::string eventDatagram = "PIXEL ";
-  addNumber(eventDatagram, x);
+  eventDatagram += std::to_string(x);
   eventDatagram += " ";
-  addNumber(eventDatagram, y);
+  eventDatagram += std::to_string(y);
   eventDatagram += " " + playerName + "\n";
 
   return eventDatagram;

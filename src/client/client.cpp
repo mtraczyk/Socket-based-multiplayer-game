@@ -9,6 +9,7 @@
 #include <chrono>
 #include <fcntl.h>
 #include <queue>
+#include <algorithm>
 
 #include "client.h"
 #include "../shared_functionalities/err.h"
@@ -45,7 +46,6 @@ uint64_t sessionId;
 uint32_t nextExpectedEventNo = 0; // equals zero when a new game starts
 uint32_t gameId = 0;
 bool gamePlayed = false;
-std::queue<Event> queueOfGameEvents;
 
 namespace {
   int getGuiSocket(std::string const &guiServer, uint16_t guiServerPort) {
@@ -80,6 +80,18 @@ namespace {
     freeaddrinfo(addrResult);
 
     return sock;
+  }
+
+  // global structure used to store events that occurred in the current game
+  inline std::queue<Event *> &eventsQueue() {
+    static auto *s = new std::queue<Event *>();
+    return *s;
+  }
+
+  // global structure used to store events that occurred in the current game
+  inline std::vector<std::string> &playersNames() {
+    static auto *s = new std::vector<std::string>();
+    return *s;
   }
 
   inline void getCurrentTime() {
@@ -186,36 +198,75 @@ namespace {
     for (uint32_t i = leftIndex; i <= rightIndex; i++) {
       aux += ((uint32_t) buffer[i]
         << ((rightIndex - leftIndex + 1) * numberOfBitsInByte - (i + 1 - leftIndex) * numberOfBitsInByte));
-
-      std::cout << "f: " << (rightIndex - leftIndex + 1) * numberOfBitsInByte -
-                            (i + 1 - leftIndex) * numberOfBitsInByte << std::endl;
     }
 
     return aux;
   }
 
-  void decodeNewGameMessage(uint32_t index) {
+  inline bool correctName(std::string const &name) {
+    for (auto const &u : name) {
+      if (!(u >= 33 && u <= 126)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void decodeNewGameMessage(uint32_t index, uint32_t playersDataLen) {
     if (!gamePlayed) {
       gamePlayed = true;
       auto maxx = readNumberFromBuffer(index, index + 3);
       auto maxy = readNumberFromBuffer(index + 4, index + 7);
+      std::vector<std::string> players;
 
-      std::cout << maxx << " " << maxy << std::endl;
+      std::string player;
+      for (uint32_t i = index + 8; i < index + playersDataLen + 8; i++) {
+        if (buffer[i] == '\0') {
+          if (correctName(player)) {
+            players.push_back(player);
+          } else {
+            syserr("incorrect player name");
+          }
+          player = "";
+        } else {
+          player += buffer[i];
+        }
+      }
+
+      if (!player.empty()) {
+        syserr("incorrect player name");
+      }
+
+      std::sort(players.begin(), players.end());
+      eventsQueue().push(new NewGame(nextExpectedEventNo, NEW_GAME, maxx, maxy, players));
+      playersNames().clear();
+      playersNames() = players;
     } else {
       syserr("New game event while a game is played");
     }
   }
 
   void decodePixelMessage(uint32_t index) {
+    auto playerNumber = readNumberFromBuffer(index, index);
+    auto x = readNumberFromBuffer(index + 1, index + 4);
+    auto y = readNumberFromBuffer(index + 5, index + 8);
 
+    eventsQueue().push(new Pixel(nextExpectedEventNo, PIXEL, playerNumber, playersNames()[playerNumber], x, y));
   }
 
   void decodePlayerEliminatedMessage(uint32_t index) {
+    auto playerNumber = readNumberFromBuffer(index, index);
 
+    eventsQueue().push(
+      new PlayerEliminated(nextExpectedEventNo, PLAYER_ELIMINATED, playerNumber, playersNames()[playerNumber]));
   }
 
   void decodeGameOverMessage() {
+    eventsQueue().push(new GameOver(nextExpectedEventNo, GAME_OVER));
 
+    nextExpectedEventNo = 0;
+    gamePlayed = false;
   }
 
   void decodeMessageFromGameServer(uint32_t messageLen) {
@@ -224,22 +275,27 @@ namespace {
       messageLen -= 4;
       auto currentIndex = 4;
       while (messageLen > 0) {
-        auto eventLen = readNumberFromBuffer(currentIndex, currentIndex + 3);
-        auto eventCrc32 = readNumberFromBuffer(currentIndex + eventLen + 4, currentIndex + eventLen + 7);
+        auto eventDataLen = readNumberFromBuffer(currentIndex, currentIndex + 3);
         auto eventNo = readNumberFromBuffer(currentIndex + 4, currentIndex + 7);
         auto eventType = readNumberFromBuffer(currentIndex + 8, currentIndex + 8);
+        auto eventCrc32 = readNumberFromBuffer(currentIndex + eventDataLen + 4, currentIndex + eventDataLen + 7);
 
         if (eventNo == nextExpectedEventNo) {
           switch (eventType) {
             case NEW_GAME:
-              decodeNewGameMessage(currentIndex + 9);
+              decodeNewGameMessage(currentIndex + 9, eventDataLen - 13);
+              break;
             case PIXEL:
               decodePixelMessage(currentIndex + 9);
+              break;
             case PLAYER_ELIMINATED:
               decodePlayerEliminatedMessage(currentIndex + 9);
+              break;
             case GAME_OVER:
               decodeGameOverMessage();
           }
+
+          nextExpectedEventNo++;
         } else {
           return;
         }
@@ -250,8 +306,8 @@ namespace {
 //          break;
 //        }
 
-        messageLen -= eventLen - 8;
-        currentIndex += eventLen + 8;
+        messageLen -= eventDataLen - 8;
+        currentIndex += eventDataLen + 8;
       }
     }
   }
@@ -305,9 +361,9 @@ namespace {
   }
 
   void sendMessageToGuiServer(int guiSocket) {
-    while (!queueOfGameEvents.empty()) {
-      sendMessageToServer(guiSocket, queueOfGameEvents.front().getByteRepresentationClient());
-      queueOfGameEvents.pop();
+    while (!eventsQueue().empty()) {
+      sendMessageToServer(guiSocket, eventsQueue().front()->getByteRepresentationClient());
+      eventsQueue().pop();
     }
   }
 
