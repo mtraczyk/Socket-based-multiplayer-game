@@ -312,7 +312,6 @@ namespace {
         auto eventDataLen = readNumberFromBuffer(currentIndex, currentIndex + 3);
         auto eventNo = readNumberFromBuffer(currentIndex + 4, currentIndex + 7);
         auto eventType = readNumberFromBuffer(currentIndex + 8, currentIndex + 8);
-        auto eventCrc32 = readNumberFromBuffer(currentIndex + eventDataLen + 4, currentIndex + eventDataLen + 7);
 
         if (eventNo == nextExpectedEventNo) {
           switch (eventType) {
