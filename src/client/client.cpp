@@ -459,8 +459,8 @@ void client(std::string const &gameServer, std::string const &playerName,
       syserr("poll error");
     }
 
-    checkSendMessageToGameServer(servSocket, playerName);
     checkMessageFromGui(guiSocket);
+    checkSendMessageToGameServer(servSocket, playerName);
     checkMessageFromGameServer(servSocket);
     sendMessageToGuiServer(guiSocket);
   }
