@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/cc -g -Wall -g -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/echo-server.dir/echo-server.c.o  -o echo-server  liberr.a 

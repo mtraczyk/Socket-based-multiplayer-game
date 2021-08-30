@@ -1,0 +1,9 @@
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/install/local.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/install/strip.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/install.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/list_install_components.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/echo-client.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/echo-server.dir
+/Users/hubert/Documents/sik/4/cmake-build-debug/CMakeFiles/err.dir
