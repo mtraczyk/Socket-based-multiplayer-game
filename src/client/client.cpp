@@ -328,7 +328,7 @@ namespace {
               decodeGameOverMessage();
           }
 
-          if (eventType <= GAME_OVER) {
+          if (eventType < GAME_OVER) {
             nextExpectedEventNo++;
           }
         } else {

@@ -241,19 +241,19 @@ class ClientTests(unittest.TestCase):
         test.send_tcp("RIGHT_KEY_DOWN")
         self.assertEqual(test.read_udp().turn_direction, TurnDirection.RIGHT)
 
-    # def test_invalid_input_long_prefix(self):
-    #     test = ClientTest(self)
-    #     self.assertEqual(test.read_udp().turn_direction, TurnDirection.STRAIGHT)
-    #     test.send_tcp("LEFT_KEY_DOWN")
-    #     self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
-    #     s = time.time()
-    #     for i in range(1, 64*1024):
-    #         test.send_tcp('a' * i + "LEFT_KEY_UP")
-    #     e = time.time()
-    #     for i in range(int((e-s)/0.03*1.5)):
-    #         self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
-    #     test.send_tcp("RIGHT_KEY_DOWN")
-    #     self.assertEqual(test.read_udp().turn_direction, TurnDirection.RIGHT)
+    def test_invalid_input_long_prefix(self):
+        test = ClientTest(self)
+        self.assertEqual(test.read_udp().turn_direction, TurnDirection.STRAIGHT)
+        test.send_tcp("LEFT_KEY_DOWN")
+        self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
+        s = time.time()
+        for i in range(1, 64*1024):
+            test.send_tcp('a' * i + "LEFT_KEY_UP")
+        e = time.time()
+        for i in range(int((e-s)/0.03*1.5)):
+            self.assertEqual(test.read_udp().turn_direction, TurnDirection.LEFT)
+        test.send_tcp("RIGHT_KEY_DOWN")
+        self.assertEqual(test.read_udp().turn_direction, TurnDirection.RIGHT)
 
 if __name__ == '__main__':
     unittest.main()
