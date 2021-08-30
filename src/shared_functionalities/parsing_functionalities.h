@@ -20,6 +20,17 @@ template<typename T>
 void addNumber(std::string &datagram, T number) {
   if (std::is_same<T, std::uint32_t>::value) {
     number = htonl(number);
+  } else if (std::is_same<T, std::uint64_t>::value) {
+    // The answer is 42
+    static const int num = 42;
+
+    // Check the endianness
+    if (*reinterpret_cast<const char *>(&num) == num) {
+      const uint32_t high_part = htonl(static_cast<uint32_t>(number >> 32));
+      const uint32_t low_part = htonl(static_cast<uint32_t>(number & 0xFFFFFFFFLL));
+
+      number = (static_cast<uint64_t>(low_part) << 32) | high_part;
+    }
   }
 
   auto byteArray = toByte(number);

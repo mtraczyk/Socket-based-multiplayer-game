@@ -191,7 +191,7 @@ namespace {
       // there is a message from gui
       cleanBuffer();
       int len = read(guiSocket, buffer, BUFFER_SIZE);
-      if (len < 0) {
+      if (len <= 0) {
         syserr("read");
       }
 
@@ -345,7 +345,7 @@ namespace {
     if (checkPollStatus(1)) {
       int rcvLen = read(servSocket, buffer, BUFFER_SIZE);
 
-      if (rcvLen < 0 || (rcvLen == 0 && !(errno == EAGAIN || errno == EWOULDBLOCK))) {
+      if (rcvLen == 0 || (rcvLen < 0 && !(errno == EAGAIN || errno == EWOULDBLOCK))) {
         syserr("client's read");
       } else {
         decodeMessageFromGameServer(rcvLen);
@@ -371,7 +371,7 @@ namespace {
 
     auto len = write(socket, messageAsACArray, numberOfBytesYetToBeWritten);
 
-    if (len < 0) {
+    if (len <= 0) {
       syserr("write");
     }
     auto numberOfBytesAlreadyWritten = len;
@@ -380,7 +380,7 @@ namespace {
     // Size of the message might be bigger than the buffer's size.
     while (numberOfBytesYetToBeWritten != 0) {
       len = write(socket, &messageAsACArray[numberOfBytesAlreadyWritten], numberOfBytesYetToBeWritten);
-      if (len < 0) {
+      if (len <= 0) {
         syserr("write");
       }
 

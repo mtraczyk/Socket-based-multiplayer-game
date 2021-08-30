@@ -220,14 +220,14 @@ class ClientTests(unittest.TestCase):
             test.send_udp([PixelEvent(1, x, y)])
             test.expect_error_exit()
 
-    # def test_dead_ui(self):
-    #     test = ClientTest(self)
-    #     test.send_udp([NewGameEvent(48, 48, ["a", "b", "c"])])
-    #     test.read_udp()
-    #     test.read_and_check_tcp()
-    #     test.tcp_socket.shutdown(socket.SHUT_RDWR)
-    #     test.tcp_socket.close()
-    #     test.expect_error_exit()
+    def test_dead_ui(self):
+        test = ClientTest(self)
+        test.send_udp([NewGameEvent(48, 48, ["a", "b", "c"])])
+        test.read_udp()
+        test.read_and_check_tcp()
+        test.tcp_socket.shutdown(socket.SHUT_RDWR)
+        test.tcp_socket.close()
+        test.expect_error_exit()
 
     def test_simple_invalid_input(self):
         test = ClientTest(self)
