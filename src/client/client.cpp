@@ -16,7 +16,6 @@
 #include "../shared_functionalities/err.h"
 #include "../shared_functionalities/parsing_functionalities.h"
 #include "../shared_functionalities/event.h"
-#include "../shared_functionalities/crc32.h"
 
 #define DATA_ARR_SIZE 3
 #define FREQUENCY 30000000 // how frequent are messages to the game server in nanoseconds
@@ -274,10 +273,6 @@ namespace {
     auto playerNumber = readNumberFromBuffer(index, index);
     auto x = readNumberFromBuffer(index + 1, index + 4);
     auto y = readNumberFromBuffer(index + 5, index + 8);
-
-    if (x >= gameMaxx || y >= gameMaxy) {
-      syserr("player out of bounds");
-    }
 
     checkPlayerNumber(playerNumber);
     eventsQueue().push(new Pixel(nextExpectedEventNo, PIXEL, playerNumber, playersNames()[playerNumber], x, y));
